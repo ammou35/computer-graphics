@@ -1,0 +1,20 @@
+# Ignore everything
+*
+
+# Allow src/ and bin/
+!src/
+!bin/
+!*.gitignore
+
+# Allow files inside src/ and bin/ (if necessary)
+!src/**
+!bin/**
+
+# Ignore build & temp files (optional)
+*.obj
+*.exe
+*.dll
+*.pdb
+.vscode/
+.vs/
+*.log
