@@ -1,13 +1,20 @@
-// IFT3100H25_ImageImport/main.cpp
-// Exemple d'importation et d'affichage en pleine fenÃªtre d'une image.
-// L'image est importÃ©e Ã  partir d'un fichier qui se trouve dans le rÃ©pertoire ./bin/data.
-// Une nouvelle image peut aussi Ãªtre glissÃ©e-dÃ©posÃ©e sur la fenÃªtre de l'application.
-
 #include "ofMain.h"
 #include "application.h"
 
 int main()
 {
-  ofSetupOpenGL(512, 512, OF_WINDOW);
-  ofRunApp(new Application());
+    // paramètres du contexte de rendu OpenGL
+    ofGLFWWindowSettings windowSettings;
+
+    // option de redimentionnement de la fenêtre d'affichage
+    windowSettings.resizable = true;
+
+    // sélection de la version de OpenGL
+    windowSettings.setGLVersion(3, 3);
+
+    // création de la fenêtre
+    ofCreateWindow(windowSettings);
+
+    // démarrer l'exécution de l'application
+    ofRunApp(new Application());
 }

@@ -1,0 +1,59 @@
+#pragma once
+// IFT-3100-H2025/src/3D/geometrie.h
+// Classe responsable du rendu 3D.
+
+#pragma once
+
+#include "ofMain.h"
+#include "ofxAssimpModelLoader.h"
+
+enum class ElementScene3DType { none, cube, sphere, cylinder, cone, donut, plate, spaghetti_getter};
+
+struct ElementScene3D {
+	ElementScene3DType type;
+	std::array<float, 9> transformation; // Translation(3), rotation(3), proportion(3)
+	bool is_selected;
+	bool bounding_box;
+};
+
+class Geometrie
+{
+public:
+	ofLight light;
+
+	ofxAssimpModelLoader donut;
+	ofxAssimpModelLoader plate;
+	ofxAssimpModelLoader spaghetti_getter;
+
+	// shaders ?
+	// 	ofShader shader;
+	// ofShader shader_lambert;
+	// ofShader shader_normal;
+	// 
+	// ofColor color_ambient;
+	// ofColor color_diffuse;
+
+	bool projection_mode = false; // projection orthogonale
+
+	float scale;
+
+	float rotation_speed; // not sure
+
+	bool use_rotation;
+
+	void setup();
+	void update();
+	void draw();
+
+	void draw_cube() const;   // Fonction pour ajouter un cube
+	void draw_sphere() const; // Fonction pour ajouter une sphère
+	void draw_cylinder() const; // Fonction pour ajouter un cylindre
+	void draw_cone() const; // Fonction pour ajouter un cône
+
+	void draw_donut(); // Fonction pour ajouter un donut
+	void draw_plate(); // Fonction pour ajouter une assiette
+	void draw_spaghetti_getter(); // Fonction pour ajouter 
+
+	void draw_bounding_box() const;
+	void set_projection_mode(bool mode);
+};
