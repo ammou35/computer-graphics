@@ -286,9 +286,21 @@ void Application::mousePressed(int x, int y, int button) {
 
                 renderer.graph.geometrie.drag_offset = point_selected - mouse_pos;
             }
-
-
         }
+
+        // Find the Z position of the surface (average Z of control points)
+        float average_z = 0.0f;
+        for (int i = 0; i < 4; ++i)
+            for (int j = 0; j < 4; ++j)
+                average_z += renderer.graph.geometrie.control_grid[i][j].z;
+        average_z /= 16.0f;
+
+        // Define a plane parallel to camera view, passing through surface center
+        ofVec3f plane_origin(0, 0, average_z);
+        ofVec3f plane_normal = renderer.camera.getLookAtDir();
+
+        // Project mouse onto that plane without wrong offset
+        corrected_mouse = renderer.screenToViewPlane(x, y, plane_origin, plane_normal);
 
         // Sinon (on n'a pas cliqué sur un point), créer une nouvelle grille si demandé
         if (guiManager.get_type_vector_primitive() == 20) {
