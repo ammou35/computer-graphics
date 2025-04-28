@@ -219,43 +219,45 @@ void Application::mouseMoved(int x, int y ){
 void Application::mouseDragged(int x, int y, int button){
     renderer.set_mouse_current_x(x);
     renderer.set_mouse_current_y(y);
+
     if (renderer.graph.geometrie.is_bezier_curve) {
         if (renderer.graph.geometrie.is_dragging && renderer.graph.geometrie.selected_i >= 0 && renderer.graph.geometrie.selected_j >= 0)
         {
-            ofVec3f corrected_mouse = renderer.screenToScene(x, y);
+            float z = renderer.graph.geometrie.control_grid[renderer.graph.geometrie.selected_i][renderer.graph.geometrie.selected_j].z;
+            ofVec3f corrected_mouse = renderer.screenToScene(x - 300, y - 24); // Pas besoin de recalcul compliqué si la caméra n'est plus inversée
 
-            renderer.graph.geometrie.control_grid[renderer.graph.geometrie.selected_i][renderer.graph.geometrie.selected_j].x = corrected_mouse.x;
-            renderer.graph.geometrie.control_grid[renderer.graph.geometrie.selected_i][renderer.graph.geometrie.selected_j].y = corrected_mouse.y;
+            renderer.graph.geometrie.control_grid[renderer.graph.geometrie.selected_i][renderer.graph.geometrie.selected_j] = corrected_mouse;
             renderer.graph.geometrie.update_mesh();
         }
     }
 }
 
+
 //--------------------------------------------------------------
-void Application::mousePressed(int x, int y, int button){
+void Application::mousePressed(int x, int y, int button) {
     renderer.set_is_mouse_button_pressed(true);
 
     renderer.set_mouse_current_x(x);
     renderer.set_mouse_current_y(y);
-
     renderer.set_mouse_press_x(x);
     renderer.set_mouse_press_y(y);
 
-    if (renderer.graph.geometrie.is_bezier_curve) {
+    if (button == 0 && renderer.is_mouse_in_draw_area() && guiManager.get_type_vector_primitive() == 20) {
 
-        ofVec3f corrected_mouse = renderer.screenToScene(x, y);
-        for (int i = 0; i < 4; ++i)
+        ofVec3f corrected_mouse = renderer.screenToScene(x - 300, y - 24);
+        corrected_mouse.z = 0;
+
+        for (int i = 0; i < 4; ++i) {
             for (int j = 0; j < 4; ++j)
             {
-                ofVec3f temp = renderer.graph.geometrie.control_grid[i][j];
-                if (corrected_mouse.distance(renderer.graph.geometrie.control_grid[i][j]) < renderer.graph.geometrie.radius * 4)
-                {
-                    renderer.graph.geometrie.is_dragging = true;
-                    renderer.graph.geometrie.selected_i = i;
-                    renderer.graph.geometrie.selected_j = j;
-                    return;
-                }
+                renderer.graph.geometrie.control_grid[i][j].x = corrected_mouse.x + (i - 1.5f) * 100;
+                renderer.graph.geometrie.control_grid[i][j].y = corrected_mouse.y + (j - 1.5f) * 100;
+                renderer.graph.geometrie.control_grid[i][j].z = corrected_mouse.z;
             }
+        }
+
+        renderer.graph.geometrie.update_mesh();
+        renderer.graph.geometrie.is_bezier_curve = true;
     }
 }
 
@@ -286,8 +288,9 @@ void Application::mouseExited(int x, int y){
 }
 
 //--------------------------------------------------------------
-void Application::windowResized(int w, int h){
-
+void Application::windowResized(int w, int h) {
+    renderer.camera.setPosition(0, 0, 600); // on repositionne proprement
+    renderer.camera.lookAt(ofVec3f(0, 0, 0));
 }
 
 //--------------------------------------------------------------

@@ -36,6 +36,8 @@ public:
 	// ofColor color_ambient;
 	// ofColor color_diffuse;
 
+	float selected_point_depth = 0.0f;
+
 	// Bézier bicubique
 	ofVec3f control_grid[4][4];
 	int resolution_u = 20;
