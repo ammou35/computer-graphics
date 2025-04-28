@@ -54,6 +54,11 @@ void Geometrie::setup()
     // Sélectionner le shader courant
     //shader = shader_lambert;
 
+    lambert_shader.load("shaders/phong-lambert.vert", "shaders/lambert.frag");
+    phong_shader.load("shaders/phong-lambert.vert", "shaders/phong.frag");
+    blinn_phong_shader.load("shaders/phong-lambert.vert", "shaders/blinn-phong.frag");
+    gouraud_shader.load("shaders/gouraud.vert", "shaders/gouraud.frag");
+
     // Volcanic Magma - Bright, hot, glowing
     material_VolcanicRock.setAmbientColor(ofColor(80, 10, 0));
     material_VolcanicRock.setDiffuseColor(ofColor(255, 60, 10));
@@ -174,7 +179,9 @@ void Geometrie::draw_cube(ofMaterial material)
     ofEnableLighting();
 
     material.begin();
+    phong_shader.begin();
     box.draw();
+    phong_shader.end();
     material.end();
 
     ofDisableLighting();

@@ -36,6 +36,11 @@ public:
 	ofMaterial material_AncientBronze;
 	ofMaterial material_None;
 
+	ofShader phong_shader;
+	ofShader blinn_phong_shader;
+	ofShader lambert_shader;
+	ofShader gouraud_shader;
+
 	// shaders ?
 	// 	ofShader shader;
 	// ofShader shader_lambert;
