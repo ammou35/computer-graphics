@@ -27,9 +27,8 @@ void Renderer::setup()
     graph.setup();
     camera.setNearClip(0.1f);   // how close something can be before clipping
     camera.setFarClip(10000.f); // how far something can be before clipping
-    camera.setPosition(0, 0, 600);     // set manually position
+    camera.setPosition(1000, 0, 1000);     // set manually position
     camera.lookAt(ofVec3f(0, 0, 0)); // look at the origin
-    camera.setScale(1, 1, 1);
 }
 
 void Renderer::update(const GuiManager& guiManager) {
@@ -46,11 +45,10 @@ void Renderer::update(const GuiManager& guiManager) {
 void Renderer::draw()
 {
     camera.begin();
-    ofPushMatrix();
-    if (get_is_mouse_button_pressed()) {
-        ofSetColor(255, 0, 0);
-        ofDrawSphere(screenToScene(get_mouse_current_x(), get_mouse_current_y()), 5);
-    }
+    //if (get_is_mouse_button_pressed()) {
+    //    ofSetColor(255, 0, 0);
+    //    ofDrawSphere(screenToScene(get_mouse_current_x(), get_mouse_current_y()), 5);
+    //}
     //ofTranslate(offset_x, offset_y, offset_z);
     //ofRotateXDeg(rotation_x);
     //ofRotateYDeg(rotation_y);
@@ -58,7 +56,6 @@ void Renderer::draw()
     for (const auto& i : image)
         i.draw(300, 24, 0);
     graph.draw(get_mouse_press(), get_mouse_current(), get_is_mouse_button_pressed());
-    ofPopMatrix();
     camera.end();
 }
 
