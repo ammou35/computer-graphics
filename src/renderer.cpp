@@ -34,12 +34,14 @@ void Renderer::setup()
 void Renderer::update(const GuiManager& guiManager) {
     graph.update(guiManager.get_vector_stroke_color(), guiManager.get_vector_fill_color(), guiManager.get_type_vector_primitive(), guiManager.transformation, guiManager.transformation3D, guiManager.element3D_material);
     graph.geometrie.set_projection_mode(guiManager.projection);
+    graph.geometrie.shader_mode = guiManager.shader_mode;
     graph.bounding_box = guiManager.delimitation;
     graph.dessinVectoriel.stroke_width_default = guiManager.lineWidth;
     set_bg_color(guiManager.get_vector_bg_color());
     ofSetBackgroundColor(bg_color);
     center_x = ofGetWidth() / 2.0f;
     center_y = ofGetHeight() / 2.0f;
+    graph.geometrie.update();
 }
 
 void Renderer::draw()

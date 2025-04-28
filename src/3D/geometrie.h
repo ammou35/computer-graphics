@@ -41,13 +41,9 @@ public:
 	ofShader lambert_shader;
 	ofShader gouraud_shader;
 
-	// shaders ?
-	// 	ofShader shader;
-	// ofShader shader_lambert;
-	// ofShader shader_normal;
-	// 
-	// ofColor color_ambient;
-	// ofColor color_diffuse;
+	int shader_mode;
+	ofShader* shader_active = nullptr;
+	string shader_name;
 
 	float selected_point_depth = 0.0f;
 

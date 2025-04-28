@@ -24,6 +24,7 @@ void GuiManager::setup() {
     showGraph3DTransformation = false;
     showGraph3DMats = false;
     element3D_material = -1;
+    shader_mode = -1;
 }
 
 void GuiManager::update(Graph& graph) {
@@ -107,7 +108,7 @@ void GuiManager::draw(ElementScene2D* element2D, ElementScene3D* element3D, cons
     ImGui::Begin("Left Panel", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
     //ImGui::Text("This is a fixed left panel");
 
-    if (ImGui::CollapsingHeader("Images", ImGuiTreeNodeFlags_DefaultOpen)) {
+    if (ImGui::CollapsingHeader("Images")) {
         if (ImGui::BeginTabBar("ImagesTabBar")) {
             if (ImGui::BeginTabItem("Added images")) {
                 for (int i = 0; i < images.size(); i++) {
@@ -125,7 +126,7 @@ void GuiManager::draw(ElementScene2D* element2D, ElementScene3D* element3D, cons
         }
     }
 
-    if (ImGui::CollapsingHeader("Vector drawing"), ImGuiTreeNodeFlags_DefaultOpen) {
+    if (ImGui::CollapsingHeader("Vector drawing")) {
         if (ImGui::BeginTabBar("Tabs")) {
             if (ImGui::BeginTabItem("Primitives")) {
                 if (ImGui::RadioButton("Pixel", get_type_vector_primitive() == 1)) {
@@ -305,18 +306,42 @@ void GuiManager::draw(ElementScene2D* element2D, ElementScene3D* element3D, cons
         }
     }
     if (ImGui::CollapsingHeader("3D"), ImGuiTreeNodeFlags_DefaultOpen) {
-        if (ImGui::RadioButton("Ambient light", get_type_vector_primitive() == 21)) {
-            set_type_vector_primitive(21);
+        if (ImGui::BeginTabBar("Tab_lights")) {
+            if (ImGui::BeginTabItem("Lights")) {
+                if (ImGui::RadioButton("Ambient light", get_type_vector_primitive() == 21)) {
+                    set_type_vector_primitive(21);
+                }
+                if (ImGui::RadioButton("Directionnal light", get_type_vector_primitive() == 22)) {
+                    set_type_vector_primitive(22);
+                }
+                if (ImGui::RadioButton("Point light", get_type_vector_primitive() == 23)) {
+                    set_type_vector_primitive(23);
+                }
+                if (ImGui::RadioButton("Spot light", get_type_vector_primitive() == 24)) {
+                    set_type_vector_primitive(24);
+                }
+                ImGui::EndTabItem();
+            }
+            if (ImGui::BeginTabItem("Light models")) {
+                if (ImGui::RadioButton("Default", shader_mode == -1)) {
+                    shader_mode = -1;
+                }
+                if (ImGui::RadioButton("Lambert", shader_mode == 1)) {
+                    shader_mode = 1;
+                }
+                if (ImGui::RadioButton("Gouraud", shader_mode == 2)) {
+                    shader_mode = 2;
+                }
+                if (ImGui::RadioButton("Phong", shader_mode == 3)) {
+                    shader_mode = 3;
+                }
+                if (ImGui::RadioButton("Blinn-Phong", shader_mode == 4)) {
+                    shader_mode = 4;
+                }
+                ImGui::EndTabItem();
+            }
         }
-        if (ImGui::RadioButton("Directionnal light", get_type_vector_primitive() == 22)) {
-            set_type_vector_primitive(22);
-        }
-        if (ImGui::RadioButton("Point light", get_type_vector_primitive() == 23)) {
-            set_type_vector_primitive(23);
-        }
-        if (ImGui::RadioButton("Spot light", get_type_vector_primitive() == 24)) {
-            set_type_vector_primitive(24);
-        }
+        ImGui::EndTabBar();
         if (ImGui::Checkbox("Delimitation box", &delimitation)) {}
         if (ImGui::BeginTabBar("Tabs2")) {
             if (ImGui::BeginTabItem("Primitives")) {
