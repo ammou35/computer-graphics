@@ -7,7 +7,8 @@
 #include "ofMain.h"
 #include "ofxAssimpModelLoader.h"
 
-enum class ElementScene3DType { none, cube, sphere, cylinder, cone, donut, plate, spaghetti_getter, bezier_curve };
+enum class ElementScene3DType { none, cube, sphere, cylinder, cone, donut, plate, spaghetti_getter, bezier_curve};
+enum class ElementScene3DMaterial { none, volcanicRock, frozenCrystal, mossyStone, neonTech, ancientBronze };
 
 struct ElementScene3D {
 	ElementScene3DType type;
@@ -15,18 +16,25 @@ struct ElementScene3D {
 	bool is_selected;
 	bool bounding_box;
 	//texture
-	//materiel
-
+	ElementScene3DMaterial material;
 };
 
 class Geometrie
 {
 public:
 	ofLight light;
+	ofLight light_point;
 
 	ofxAssimpModelLoader donut;
 	ofxAssimpModelLoader plate;
 	ofxAssimpModelLoader spaghetti_getter;
+
+	ofMaterial material_VolcanicRock;
+	ofMaterial material_FrozenCrystal;
+	ofMaterial material_MossyStone;
+	ofMaterial material_NeonTech;
+	ofMaterial material_AncientBronze;
+	ofMaterial material_None;
 
 	// shaders ?
 	// 	ofShader shader;
@@ -60,7 +68,7 @@ public:
 	void update();
 	void draw();
 
-	void draw_cube() const;   // Fonction pour ajouter un cube
+	void draw_cube(ofMaterial material);   // Fonction pour ajouter un cube
 	void draw_sphere() const; // Fonction pour ajouter une sphère
 	void draw_cylinder() const; // Fonction pour ajouter un cylindre
 	void draw_cone() const; // Fonction pour ajouter un cône

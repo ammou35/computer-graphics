@@ -19,7 +19,7 @@ void Geometrie::setup()
     //light.enable();
     //shader.begin();
 
-    donut.loadModel("donut.obj");
+    //donut.loadModel("donut.obj");
     plate.loadModel("plate.obj");
     spaghetti_getter.loadModel("spaghetti_getter.obj");
 
@@ -38,12 +38,68 @@ void Geometrie::setup()
         }
     is_bezier_curve = true;
 
+    /*light.setup();
+    light.setPosition(300, 300, 300);
+    light.enable();*/
+
+    ofColor light_ambient;
+    light_ambient.set(127, 127, 127);
+
+    ofSetGlobalAmbientColor(light_ambient);
+
     // Chargement des shaders
     //shader_lambert.load("lambert_330_vs.glsl", "lambert_330_fs.glsl");
     //shader_normal.load("draw_normal_330_vs.glsl", "draw_normal_330_fs.glsl");
 
     // Sélectionner le shader courant
     //shader = shader_lambert;
+
+    // Volcanic Magma - Bright, hot, glowing
+    material_VolcanicRock.setAmbientColor(ofColor(80, 10, 0));
+    material_VolcanicRock.setDiffuseColor(ofColor(255, 60, 10));
+    material_VolcanicRock.setEmissiveColor(ofColor(150, 20, 0));  // Strong internal glow
+    material_VolcanicRock.setSpecularColor(ofColor(255, 180, 130));
+    material_VolcanicRock.setShininess(20.0f);
+
+    // Frozen Crystal - Cold, sharp reflections
+    material_FrozenCrystal.setAmbientColor(ofColor(200, 230, 255));
+    material_FrozenCrystal.setDiffuseColor(ofColor(180, 220, 255));
+    material_FrozenCrystal.setEmissiveColor(ofColor(20, 40, 80));  // Very subtle glow
+    material_FrozenCrystal.setSpecularColor(ofColor(255, 255, 255));
+    material_FrozenCrystal.setShininess(100.0f);  // Very sharp specular
+
+    // Mossy Stone - Very soft, matte, natural
+    material_MossyStone.setAmbientColor(ofColor(30, 50, 30));
+    material_MossyStone.setDiffuseColor(ofColor(50, 80, 50));
+    material_MossyStone.setEmissiveColor(ofColor(5, 10, 5));      // Minimal
+    material_MossyStone.setSpecularColor(ofColor(20, 20, 20));    // Very low specular
+    material_MossyStone.setShininess(2.0f);  // Dead matte
+
+    // Neon Tech - Bright, glowing, artificial
+    material_NeonTech.setAmbientColor(ofColor(10, 10, 50));
+    material_NeonTech.setDiffuseColor(ofColor(0, 255, 180));
+    material_NeonTech.setEmissiveColor(ofColor(0, 200, 180));     // Super glow
+    material_NeonTech.setSpecularColor(ofColor(0, 255, 255));
+    material_NeonTech.setShininess(80.0f);  // Shiny but not too sharp
+
+    // Ancient Bronze - Warm, subtle metal
+    material_AncientBronze.setAmbientColor(ofColor(90, 70, 40));
+    material_AncientBronze.setDiffuseColor(ofColor(160, 120, 60));
+    material_AncientBronze.setEmissiveColor(ofColor(30, 20, 10));
+    material_AncientBronze.setSpecularColor(ofColor(200, 150, 80));
+    material_AncientBronze.setShininess(25.0f);  // Soft metallic shine
+
+
+    material_None.setAmbientColor(ofColor(255, 255, 255));
+    material_None.setDiffuseColor(ofColor(255, 255, 255));
+    material_None.setSpecularColor(ofColor(0, 0, 0));
+    material_None.setEmissiveColor(ofColor(0, 0, 0));
+    material_None.setShininess(0.0f);
+
+    light_point.setDiffuseColor(ofColor(255, 255, 255));
+    light_point.setSpecularColor(ofColor(191, 191, 191));
+    light_point.setPointLight();
+    light_point.setPosition(300, 300, 300);
 }
 
 void Geometrie::update()
@@ -107,10 +163,27 @@ void Geometrie::draw_bounding_box() const {
 }
 
 // fonction qui dessine un cube
-void Geometrie::draw_cube() const
+void Geometrie::draw_cube(ofMaterial material)
 {
-    ofDrawBox(0, 0, 0, 100);
+    ofEnableDepthTest();
+
+    ofBoxPrimitive box;
+    box.set(200);
+
+    light_point.enable();
+    ofEnableLighting();
+
+    material.begin();
+    box.draw();
+    material.end();
+
+    ofDisableLighting();
+    light_point.disable();
+    ofDisableDepthTest();
+
+    ofDisableDepthTest();
 }
+
 
 // fonction qui dessine une sphère
 void Geometrie::draw_sphere() const
@@ -133,19 +206,33 @@ void Geometrie::draw_cone() const
 // fonction qui dessine un donut
 void Geometrie::draw_donut()
 {
-    donut.drawWireframe();
+    // configurer le matériau du teapot
+    ofEnableDepthTest();
+
+
+    // dessiner un teapot
+    donut.draw(OF_MESH_FILL);
+    // désactiver le matériau
+    //material_donut.end();
+    //donut.drawWireframe();
+    //donut.drawFaces();
+    ofDisableDepthTest();
 }
 
 // fonction qui dessine une assiette
 void Geometrie::draw_plate()
 {
+    ofEnableDepthTest();
     plate.drawWireframe();
+    ofDisableDepthTest();
 }
 
 // fonction qui dessine un cône
 void Geometrie::draw_spaghetti_getter()
 {
-    spaghetti_getter.drawWireframe();
+    ofEnableDepthTest();
+    spaghetti_getter.draw(OF_MESH_FILL);
+    ofDisableDepthTest();
 }
 
 void Geometrie::draw_bezier_curve() {

@@ -30,6 +30,9 @@ public:
     vector<std::string> imagePath;
     ofImage selected_image;
     bool is_selected_image;
+    bool showGraph3DTransformation;
+    bool showGraph3DMats;
+    int element3D_material;
 
 private:
     ofxImGui::Gui gui;
@@ -43,4 +46,6 @@ private:
     bool mode_2d;
     int item_selected;
     int item_selected3D;
+    int item_selected3D_with_material = 0;
+    bool transformationBufferIsInitialized = false;
 };

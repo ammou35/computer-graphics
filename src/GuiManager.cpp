@@ -21,6 +21,9 @@ void GuiManager::setup() {
     lineWidth = 3.0f;
     tesselation = ImVec2(20.0f, 20.0f);
     is_selected_image = false;
+    showGraph3DTransformation = false;
+    showGraph3DMats = false;
+    element3D_material = -1;
 }
 
 void GuiManager::update(Graph& graph) {
@@ -302,6 +305,18 @@ void GuiManager::draw(ElementScene2D* element2D, ElementScene3D* element3D, cons
         }
     }
     if (ImGui::CollapsingHeader("3D"), ImGuiTreeNodeFlags_DefaultOpen) {
+        if (ImGui::RadioButton("Ambient light", get_type_vector_primitive() == 21)) {
+            set_type_vector_primitive(21);
+        }
+        if (ImGui::RadioButton("Directionnal light", get_type_vector_primitive() == 22)) {
+            set_type_vector_primitive(22);
+        }
+        if (ImGui::RadioButton("Point light", get_type_vector_primitive() == 23)) {
+            set_type_vector_primitive(23);
+        }
+        if (ImGui::RadioButton("Spot light", get_type_vector_primitive() == 24)) {
+            set_type_vector_primitive(24);
+        }
         if (ImGui::Checkbox("Delimitation box", &delimitation)) {}
         if (ImGui::BeginTabBar("Tabs2")) {
             if (ImGui::BeginTabItem("Primitives")) {
@@ -352,7 +367,7 @@ void GuiManager::draw(ElementScene2D* element2D, ElementScene3D* element3D, cons
         }
     }
 
-    if (ImGui::CollapsingHeader("Graph"), ImGuiTreeNodeFlags_DefaultOpen) {
+    if (ImGui::CollapsingHeader("Graph", ImGuiTreeNodeFlags_DefaultOpen)) {
         if (ImGui::TreeNode("2D elements")) {
             for (int i = 0; i < 1000; i++) {
                 if (element2D[i].type != ElementScene2DType::none) {
@@ -401,61 +416,118 @@ void GuiManager::draw(ElementScene2D* element2D, ElementScene3D* element3D, cons
                     ImGui::PushID(i);
                     char nom[20];
                     switch (element3D[i].type) {
-                        case ElementScene3DType::none:
-                            break;
-                        case ElementScene3DType::cube:
-                            strcpy(nom, "Cube");
-                            break;
-                        case ElementScene3DType::sphere:
-                            strcpy(nom, "Sphere");
-                            break;
-                        case ElementScene3DType::cylinder:
-                            strcpy(nom, "Cylinder");
-                            break;
-                        case ElementScene3DType::cone:
-                            strcpy(nom, "Cone");
-                            break;
-                        case ElementScene3DType::donut:
-                            strcpy(nom, "Donut");
-                            break;
-                        case ElementScene3DType::plate:
-                            strcpy(nom, "Plate");
-                            break;
-                        case ElementScene3DType::spaghetti_getter:
-                            strcpy(nom, "Spaghetti Getter");
-                            break;
-                        case ElementScene3DType::bezier_curve:
-                            strcpy(nom, "Bezier curve");
-                            break;
-                        default:
-                            break;
+                    case ElementScene3DType::none:
+                        break;
+                    case ElementScene3DType::cube:
+                        strcpy(nom, "Cube");
+                        break;
+                    case ElementScene3DType::sphere:
+                        strcpy(nom, "Sphere");
+                        break;
+                    case ElementScene3DType::cylinder:
+                        strcpy(nom, "Cylinder");
+                        break;
+                    case ElementScene3DType::cone:
+                        strcpy(nom, "Cone");
+                        break;
+                    case ElementScene3DType::donut:
+                        strcpy(nom, "Donut");
+                        break;
+                    case ElementScene3DType::plate:
+                        strcpy(nom, "Plate");
+                        break;
+                    case ElementScene3DType::spaghetti_getter:
+                        strcpy(nom, "Spaghetti Getter");
+                        break;
+                    case ElementScene3DType::bezier_curve:
+                        strcpy(nom, "Bezier curve");
+                        break;
+                    default:
+                        break;
                     }
                     if (ImGui::Selectable(nom, element3D[i].is_selected)) {
+                        bool hadMaterial = (element3D[i].type == ElementScene3DType::cube ||
+                            element3D[i].type == ElementScene3DType::sphere ||
+                            element3D[i].type == ElementScene3DType::cylinder ||
+                            element3D[i].type == ElementScene3DType::cone);
+
                         if (element3D[i].is_selected) {
+                            // UNSELECT
                             item_selected3D -= 1;
-                        }
-                        else {
-                            item_selected3D += 1;
-                            if (item_selected3D == 1) {
-                                transformation3D = element3D[i].transformation;
+                            if (hadMaterial) {
+                                item_selected3D_with_material -= 1;
+                            }
+                            if (item_selected3D == 0) {
+                                showGraph3DTransformation = false;
+                                showGraph3DMats = false;
+                                transformation3D.fill(0.0f);
+                                transformationBufferIsInitialized = false; // <<< RESET the buffer flag
+                            }
+                            if (item_selected3D_with_material == 0) {
+                                showGraph3DMats = false;
                             }
                         }
-                        element3D[i].is_selected = !element3D[i].is_selected; // Highlight this item
+                        else {
+                            // SELECT
+                            item_selected3D += 1;
+                            if (hadMaterial) {
+                                item_selected3D_with_material += 1;
+                            }
+                            showGraph3DTransformation = true;
+                            if (item_selected3D_with_material > 0) {
+                                showGraph3DMats = true;
+                            }
+
+                            if (!transformationBufferIsInitialized) {
+                                transformation3D = element3D[i].transformation; // <<< COPY only if not yet initialized
+                                transformationBufferIsInitialized = true;
+                            }
+                        }
+
+                        element3D[i].is_selected = !element3D[i].is_selected;
                     }
                     ImGui::PopID();
                 }
             }
-            ImGui::PushItemWidth(125.0f);
-            ImGui::SliderFloat("Translation X", &transformation3D[0], -1000.0f, 1000.0f, "%.1f px");
-            ImGui::SliderFloat("Translation Y", &transformation3D[1], -1000.0f, 1000.0f, "%.1f px");
-            ImGui::SliderFloat("Translation Z", &transformation3D[2], -1000.0f, 1000.0f, "%.1f px");
-            ImGui::SliderFloat("Rotation X", &transformation3D[3], -360.0f, 360.0f, "%.1f px");
-            ImGui::SliderFloat("Rotation Y", &transformation3D[4], -360.0f, 360.0f, "%.1f px");
-            ImGui::SliderFloat("Rotation Z", &transformation3D[5], -360.0f, 360.0f, "%.1f px");
-            ImGui::SliderFloat("Proportion X", &transformation3D[6], -10.0f, 10.0f, "%.1f px");
-            ImGui::SliderFloat("Proportion Y", &transformation3D[7], -10.0f, 10.0f, "%.1f px");
-            ImGui::SliderFloat("Proportion Z", &transformation3D[8], -10.0f, 10.0f, "%.1f px");
-            ImGui::PopItemWidth();
+            if (showGraph3DTransformation){
+                if (ImGui::CollapsingHeader("Transformations")) {
+                    ImGui::PushItemWidth(125.0f);
+                    ImGui::SliderFloat("Translation X", &transformation3D[0], -1000.0f, 1000.0f, "%.1f px");
+                    ImGui::SliderFloat("Translation Y", &transformation3D[1], -1000.0f, 1000.0f, "%.1f px");
+                    ImGui::SliderFloat("Translation Z", &transformation3D[2], -1000.0f, 1000.0f, "%.1f px");
+                    ImGui::SliderFloat("Rotation X", &transformation3D[3], -360.0f, 360.0f, "%.1f px");
+                    ImGui::SliderFloat("Rotation Y", &transformation3D[4], -360.0f, 360.0f, "%.1f px");
+                    ImGui::SliderFloat("Rotation Z", &transformation3D[5], -360.0f, 360.0f, "%.1f px");
+                    ImGui::SliderFloat("Proportion X", &transformation3D[6], -10.0f, 10.0f, "%.1f px");
+                    ImGui::SliderFloat("Proportion Y", &transformation3D[7], -10.0f, 10.0f, "%.1f px");
+                    ImGui::SliderFloat("Proportion Z", &transformation3D[8], -10.0f, 10.0f, "%.1f px");
+                    ImGui::PopItemWidth();
+                }
+            }
+            if (showGraph3DMats) {
+                if (ImGui::CollapsingHeader("Materials")) {
+                    ImGui::PushItemWidth(125.0f);
+                    if (ImGui::RadioButton("None", element3D_material == -1)) {
+                        element3D_material = -1;
+                    }
+                    if (ImGui::RadioButton("volcanicRock", element3D_material == 1)) {
+                        element3D_material = 1;
+                    }
+                    if (ImGui::RadioButton("frozenCrystal", element3D_material == 2)) {
+                        element3D_material = 2;
+                    }
+                    if (ImGui::RadioButton("mossyStone", element3D_material == 3)) {
+                        element3D_material = 3;
+                    }
+                    if (ImGui::RadioButton("neonTech", element3D_material == 4)) {
+                        element3D_material = 4;
+                    }
+                    if (ImGui::RadioButton("ancientBronze", element3D_material == 5)) {
+                        element3D_material = 5;
+                    }
+                    ImGui::PopItemWidth();
+                }
+            }
             ImGui::TreePop(); // End of Section 1
         }
     }

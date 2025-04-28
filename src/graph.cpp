@@ -31,7 +31,7 @@ void Graph::setup() {
 	}
 }
 
-void Graph::update(const ofColor& stroke_color, const ofColor& fill_color, const int& type_vector_primitive, const std::array<float, 6>& transformation, const std::array<float, 9>&transformation3D) {
+void Graph::update(const ofColor& stroke_color, const ofColor& fill_color, const int& type_vector_primitive, const std::array<float, 6>& transformation, const std::array<float, 9>&transformation3D, const int& element3D_material) {
 	set_draw_shape(type_vector_primitive);
 	dessinVectoriel.update(stroke_color, fill_color, type_vector_primitive);
 	for (int index = 0; index < buffer_count; index++) {
@@ -48,6 +48,28 @@ void Graph::update(const ofColor& stroke_color, const ofColor& fill_color, const
 			}
 		}
 		if (element3D[index].is_selected) {
+			ElementScene3DMaterial elementScene3DMaterial;
+			switch (element3D_material) {
+			case -1:
+				elementScene3DMaterial = ElementScene3DMaterial::none;
+				break;
+			case 1:
+				elementScene3DMaterial = ElementScene3DMaterial::volcanicRock;
+				break;
+			case 2:
+				elementScene3DMaterial = ElementScene3DMaterial::frozenCrystal;
+				break;
+			case 3:
+				elementScene3DMaterial = ElementScene3DMaterial::mossyStone;
+				break;
+			case 4:
+				elementScene3DMaterial = ElementScene3DMaterial::neonTech;
+				break;
+			case 5:
+				elementScene3DMaterial = ElementScene3DMaterial::ancientBronze;
+				break;
+			}
+			element3D[index].material = elementScene3DMaterial;
 			element3D[index].transformation = transformation3D;
 			if (bounding_box) {
 				element3D[index].bounding_box = true;
@@ -87,11 +109,36 @@ void Graph::draw(const std::array<int, 2>& mouse_press, const std::array<int, 2>
 		ofSetColor(0, 0, 0);
 		ofNoFill();
 
+		ofMaterial material;
+		switch (element3D[i].material) {
+			case ElementScene3DMaterial::none:
+				material = geometrie.material_None;
+				break;
+			case ElementScene3DMaterial::volcanicRock:
+				material = geometrie.material_VolcanicRock;
+				break;
+			case ElementScene3DMaterial::frozenCrystal:
+				material = geometrie.material_FrozenCrystal;
+				break;
+			case ElementScene3DMaterial::mossyStone:
+				material = geometrie.material_MossyStone;
+				break;
+			case ElementScene3DMaterial::neonTech:
+				material = geometrie.material_NeonTech;
+				break;
+			case ElementScene3DMaterial::ancientBronze:
+				material = geometrie.material_AncientBronze;
+				break;
+			default:
+				material = geometrie.material_None;
+				break;
+		}
+
 		switch (element3D[i].type) {
 			case ElementScene3DType::none:
 				break;
 			case ElementScene3DType::cube:
-				geometrie.draw_cube();
+				geometrie.draw_cube(material);
 				break;
 			case ElementScene3DType::sphere:
 				geometrie.draw_sphere();
@@ -238,6 +285,7 @@ void Graph::add_element3D(const std::array<int, 2>& mouse_press, const std::arra
 
 	element3D[index].type = get_draw_shape_3D();
 	element3D[index].is_selected = false;
+	element3D[index].material = ElementScene3DMaterial::none;
 
 	if (bounding_box) {
 		element3D[index].bounding_box = true;
