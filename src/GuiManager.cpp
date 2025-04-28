@@ -25,6 +25,7 @@ void GuiManager::setup() {
     showGraph3DMats = false;
     element3D_material = -1;
     shader_mode = -1;
+    element3D_texture = -1;
 }
 
 void GuiManager::update(Graph& graph) {
@@ -530,25 +531,52 @@ void GuiManager::draw(ElementScene2D* element2D, ElementScene3D* element3D, cons
                 }
             }
             if (showGraph3DMats) {
-                if (ImGui::CollapsingHeader("Materials")) {
+                if (ImGui::CollapsingHeader("Proprieties")) {
                     ImGui::PushItemWidth(125.0f);
-                    if (ImGui::RadioButton("None", element3D_material == -1)) {
-                        element3D_material = -1;
-                    }
-                    if (ImGui::RadioButton("volcanicRock", element3D_material == 1)) {
-                        element3D_material = 1;
-                    }
-                    if (ImGui::RadioButton("frozenCrystal", element3D_material == 2)) {
-                        element3D_material = 2;
-                    }
-                    if (ImGui::RadioButton("mossyStone", element3D_material == 3)) {
-                        element3D_material = 3;
-                    }
-                    if (ImGui::RadioButton("neonTech", element3D_material == 4)) {
-                        element3D_material = 4;
-                    }
-                    if (ImGui::RadioButton("ancientBronze", element3D_material == 5)) {
-                        element3D_material = 5;
+                    if (ImGui::BeginTabBar("Tabs2")) {
+                        if (ImGui::BeginTabItem("Materials")) {
+                            if (ImGui::RadioButton("None", element3D_material == -1)) {
+                                element3D_material = -1;
+                            }
+                            if (ImGui::RadioButton("Volcanic Rock", element3D_material == 1)) {
+                                element3D_material = 1;
+                            }
+                            if (ImGui::RadioButton("Frozen Crystal", element3D_material == 2)) {
+                                element3D_material = 2;
+                            }
+                            if (ImGui::RadioButton("Mossy Stone", element3D_material == 3)) {
+                                element3D_material = 3;
+                            }
+                            if (ImGui::RadioButton("Neon Tech", element3D_material == 4)) {
+                                element3D_material = 4;
+                            }
+                            if (ImGui::RadioButton("Ancient Bronze", element3D_material == 5)) {
+                                element3D_material = 5;
+                            }
+                            ImGui::EndTabItem();
+                        }
+                        if (ImGui::BeginTabItem("Textures")) {
+                            if (ImGui::RadioButton("None", element3D_texture == -1)) {
+                                element3D_texture = -1;
+                            }
+                            if (ImGui::RadioButton("Wood", element3D_texture == 1)) {
+                                element3D_texture = 1;
+                            }
+                            if (ImGui::RadioButton("Sand", element3D_texture == 2)) {
+                                element3D_texture = 2;
+                            }
+                            if (ImGui::RadioButton("Bricks", element3D_texture == 3)) {
+                                element3D_texture = 3;
+                            }
+                            if (ImGui::RadioButton("Honeycomb", element3D_texture == 4)) {
+                                element3D_texture = 4;
+                            }
+                            if (ImGui::RadioButton("Spong", element3D_texture == 5)) {
+                                element3D_texture = 5;
+                            }
+                            ImGui::EndTabItem();
+                        }
+                        ImGui::EndTabBar();
                     }
                     ImGui::PopItemWidth();
                 }

@@ -34,6 +34,7 @@ public:
     bool showGraph3DMats;
     int element3D_material;
     int shader_mode;
+    int element3D_texture;
 private:
     ofxImGui::Gui gui;
     int typeVectorPrimitive_;
