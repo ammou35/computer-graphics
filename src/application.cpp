@@ -4,7 +4,6 @@ void Application::setup()
 {
     ofSetWindowTitle("IFT-3100");
     ofLogToConsole();
-    ofHideCursor();
 
     is_key_press_up = false;
     is_key_press_down = false;
@@ -31,25 +30,54 @@ void Application::update()
     time_last = time_current;
 
     if (is_key_press_up)
-        renderer.offset_y += renderer.delta_y * time_elapsed;
+        renderer.camera.boom(+10);
+        //renderer.offset_y += renderer.delta_y * time_elapsed;
     if (is_key_press_down)
-        renderer.offset_y -= renderer.delta_y * time_elapsed;
+        renderer.camera.boom(-10);
+        //renderer.offset_y -= renderer.delta_y * time_elapsed;
     if (is_key_press_left)
-        renderer.offset_x += renderer.delta_x * time_elapsed;
+        renderer.camera.truck(+10);
+        //renderer.offset_x += renderer.delta_x * time_elapsed;
     if (is_key_press_right)
-        renderer.offset_x -= renderer.delta_x * time_elapsed;
+        renderer.camera.truck(-10);
+        //renderer.offset_x -= renderer.delta_x * time_elapsed;
     if (is_key_press_q)
-        renderer.offset_z += renderer.delta_z * time_elapsed;
+        renderer.camera.dolly(+10);
     if (is_key_press_w)
-        renderer.rotation_x -= renderer.delta_r_x * time_elapsed/10;
+        renderer.camera.tilt(+1);
+        //renderer.rotation_x -= renderer.delta_r_x * time_elapsed/10;
     if (is_key_press_e)
-        renderer.offset_z -= renderer.delta_z * time_elapsed;
+        renderer.camera.dolly(-10);
+        //renderer.offset_z -= renderer.delta_z * time_elapsed;
     if (is_key_press_a)
-        renderer.rotation_y -= renderer.delta_r_y * time_elapsed/10;
+        renderer.camera.pan(-1);
+        //renderer.rotation_y -= renderer.delta_r_y * time_elapsed/10;
     if (is_key_press_s)
-        renderer.rotation_x += renderer.delta_r_x * time_elapsed/10;
+        renderer.camera.tilt(-1);
+        //renderer.rotation_x += renderer.delta_r_x * time_elapsed/10;
     if (is_key_press_d)
-        renderer.rotation_y += renderer.delta_r_y * time_elapsed/10;
+        renderer.camera.pan(+1);
+        //renderer.rotation_y += renderer.delta_r_y * time_elapsed/10;
+
+    //--------------------------------------------------------------
+// Avant renderer.update(guiManager);
+    if (is_key_press_q || is_key_press_e) {
+        float zoomFactor = 1.0f + renderer.delta_z * time_elapsed; // Un facteur doux pour le zoom
+        int mouseX = renderer.get_mouse_current_x();
+        int mouseY = renderer.get_mouse_current_y();
+
+        // Centre de l'écran
+        float centerX = ofGetWidth() / 2.0f;
+        float centerY = ofGetHeight() / 2.0f;
+
+        // Déplacer la souris proportionnellement au zoom autour du centre
+        mouseX = centerX + (mouseX - centerX) * zoomFactor;
+        mouseY = centerY + (mouseY - centerY) * zoomFactor;
+
+        renderer.set_mouse_current_x(mouseX);
+        renderer.set_mouse_current_y(mouseY);
+    }
+
 
     renderer.update(guiManager);
     guiManager.update(renderer.graph);
@@ -64,7 +92,6 @@ void Application::draw()
     if (get_ui_visible()) {
         guiManager.draw(renderer.graph.element2D, renderer.graph.element3D, renderer.graph.images);
     }
-    renderer.draw_cursor(renderer.get_mouse_current_x(), renderer.get_mouse_current_y());
     //renderer.draw_font();
 }
 
@@ -192,6 +219,16 @@ void Application::mouseMoved(int x, int y ){
 void Application::mouseDragged(int x, int y, int button){
     renderer.set_mouse_current_x(x);
     renderer.set_mouse_current_y(y);
+    if (renderer.graph.geometrie.is_bezier_curve) {
+        if (renderer.graph.geometrie.is_dragging && renderer.graph.geometrie.selected_i >= 0 && renderer.graph.geometrie.selected_j >= 0)
+        {
+            ofVec3f corrected_mouse = renderer.screenToScene(x, y);
+
+            renderer.graph.geometrie.control_grid[renderer.graph.geometrie.selected_i][renderer.graph.geometrie.selected_j].x = corrected_mouse.x;
+            renderer.graph.geometrie.control_grid[renderer.graph.geometrie.selected_i][renderer.graph.geometrie.selected_j].y = corrected_mouse.y;
+            renderer.graph.geometrie.update_mesh();
+        }
+    }
 }
 
 //--------------------------------------------------------------
@@ -203,6 +240,23 @@ void Application::mousePressed(int x, int y, int button){
 
     renderer.set_mouse_press_x(x);
     renderer.set_mouse_press_y(y);
+
+    if (renderer.graph.geometrie.is_bezier_curve) {
+
+        ofVec3f corrected_mouse = renderer.screenToScene(x, y);
+        for (int i = 0; i < 4; ++i)
+            for (int j = 0; j < 4; ++j)
+            {
+                ofVec3f temp = renderer.graph.geometrie.control_grid[i][j];
+                if (corrected_mouse.distance(renderer.graph.geometrie.control_grid[i][j]) < renderer.graph.geometrie.radius * 4)
+                {
+                    renderer.graph.geometrie.is_dragging = true;
+                    renderer.graph.geometrie.selected_i = i;
+                    renderer.graph.geometrie.selected_j = j;
+                    return;
+                }
+            }
+    }
 }
 
 //--------------------------------------------------------------
@@ -212,6 +266,11 @@ void Application::mouseReleased(int x, int y, int button){
     renderer.set_mouse_current_x(x);
     renderer.set_mouse_current_y(y);
     renderer.mouseReleased();
+
+    if (renderer.graph.geometrie.is_bezier_curve) {
+        renderer.graph.geometrie.is_dragging = false;
+        renderer.graph.geometrie.selected_i = renderer.graph.geometrie.selected_j = -1;
+    }
 }
 
 //--------------------------------------------------------------

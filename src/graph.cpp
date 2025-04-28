@@ -111,6 +111,9 @@ void Graph::draw(const std::array<int, 2>& mouse_press, const std::array<int, 2>
 			case ElementScene3DType::spaghetti_getter:
 				geometrie.draw_spaghetti_getter();
 				break;
+			case ElementScene3DType::bezier_curve:
+				geometrie.draw_bezier_curve();
+				break;
 			default:
 				break;
 		}
@@ -289,6 +292,7 @@ void Graph::set_draw_shape(const int& type_ElementScene) {
 	case 17:  draw_shape_3D = ElementScene3DType::donut; break;
 	case 18:  draw_shape_3D = ElementScene3DType::plate; break;
 	case 19:  draw_shape_3D = ElementScene3DType::spaghetti_getter; break;
+	case 20:  draw_shape_3D = ElementScene3DType::bezier_curve; break;
 	default: draw_shape_2D = ElementScene2DType::none; break;
 	}
 
@@ -296,7 +300,7 @@ void Graph::set_draw_shape(const int& type_ElementScene) {
 		draw_shape_2D = ElementScene2DType::image;
 		image_nb = type_ElementScene - 20;
 	}
-	if (type_ElementScene > 12 && type_ElementScene < 20) {
+	if (type_ElementScene > 12 && type_ElementScene < 21) {
 		draw_mode = 3;
 	}
 	else {

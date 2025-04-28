@@ -7,13 +7,16 @@
 #include "ofMain.h"
 #include "ofxAssimpModelLoader.h"
 
-enum class ElementScene3DType { none, cube, sphere, cylinder, cone, donut, plate, spaghetti_getter};
+enum class ElementScene3DType { none, cube, sphere, cylinder, cone, donut, plate, spaghetti_getter, bezier_curve };
 
 struct ElementScene3D {
 	ElementScene3DType type;
 	std::array<float, 9> transformation; // Translation(3), rotation(3), proportion(3)
 	bool is_selected;
 	bool bounding_box;
+	//texture
+	//materiel
+
 };
 
 class Geometrie
@@ -32,6 +35,18 @@ public:
 	// 
 	// ofColor color_ambient;
 	// ofColor color_diffuse;
+
+	// Bézier bicubique
+	ofVec3f control_grid[4][4];
+	int resolution_u = 20;
+	int resolution_v = 20;
+	ofMesh mesh;
+
+	bool is_dragging;
+	int selected_i;
+	int selected_j;
+	float radius;
+	bool is_bezier_curve;
 
 	bool projection_mode = false; // projection orthogonale
 
@@ -52,8 +67,12 @@ public:
 
 	void draw_donut(); // Fonction pour ajouter un donut
 	void draw_plate(); // Fonction pour ajouter une assiette
-	void draw_spaghetti_getter(); // Fonction pour ajouter 
+	void draw_spaghetti_getter(); // Fonction pour ajouter
+	void draw_bezier_curve();
 
 	void draw_bounding_box() const;
 	void set_projection_mode(bool mode);
+
+	void bezier_bicubic(float u, float v, const ofVec3f control_points[4][4], float& x, float& y, float& z);
+	void update_mesh();
 };

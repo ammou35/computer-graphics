@@ -15,6 +15,8 @@ class Renderer
     vector<ofImage> image; //img contenue dans le rendu
 
 public:
+
+    ofCamera camera;
     Graph graph;
 
     float center_x;
@@ -64,6 +66,8 @@ public:
 
     void mouseReleased(void);
     void draw_font(void);
+
+    ofVec3f Renderer::screenToScene(int x, int y);
 
 private:
     ofColor bg_color;

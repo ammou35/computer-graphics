@@ -19,6 +19,7 @@ void GuiManager::setup() {
     delimitation = false;
     projection = false;
     lineWidth = 3.0f;
+    tesselation = ImVec2(20.0f, 20.0f);
     is_selected_image = false;
 }
 
@@ -41,6 +42,8 @@ void GuiManager::update(Graph& graph) {
     if (existe_image_selectionne == 0) {
         is_selected_image = false;
     }
+    graph.geometrie.resolution_u = tesselation.x;
+    graph.geometrie.resolution_v = tesselation.y;
 }
 
 
@@ -329,6 +332,22 @@ void GuiManager::draw(ElementScene2D* element2D, ElementScene3D* element3D, cons
                 }
                 ImGui::EndTabItem();
             }
+            if (ImGui::BeginTabItem("Surfaces")) {
+                if (ImGui::RadioButton("Bezier bicubic surface", get_type_vector_primitive() == 20)) {
+                    if (get_type_vector_primitive() == 20) {
+                        set_type_vector_primitive(-1); // Décocher si déjà sélectionné
+                    }
+                    else {
+                        set_type_vector_primitive(20);  // Sinon sélectionner
+                    }
+
+                }
+                ImGui::EndTabItem();
+                ImGui::Text("Adjust tesselation x:");
+                ImGui::SliderFloat("##tesselation1", &tesselation.x, 1.0f, 100.0f, "%.1f");
+                ImGui::Text("Adjust tesselation y:");
+                ImGui::SliderFloat("##tesselation2", &tesselation.y, 1.0f, 100.0f, "%.1f");
+            }
             ImGui::EndTabBar();
         }
     }
@@ -404,6 +423,9 @@ void GuiManager::draw(ElementScene2D* element2D, ElementScene3D* element3D, cons
                             break;
                         case ElementScene3DType::spaghetti_getter:
                             strcpy(nom, "Spaghetti Getter");
+                            break;
+                        case ElementScene3DType::bezier_curve:
+                            strcpy(nom, "Bezier curve");
                             break;
                         default:
                             break;

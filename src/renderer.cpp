@@ -25,6 +25,11 @@ void Renderer::setup()
     set_mouse_current_y(0);
     set_is_mouse_button_pressed(false);
     graph.setup();
+    camera.setNearClip(0.1f);   // how close something can be before clipping
+    camera.setFarClip(10000.f); // how far something can be before clipping
+    camera.setPosition(ofGetWidth()/2, ofGetHeight()/2, 600);     // set manually position
+    camera.lookAt(ofVec3f(ofGetWidth() / 2, ofGetHeight() / 2, 0)); // look at the origin
+    camera.setScale(1, -1, 1);
 }
 
 void Renderer::update(const GuiManager& guiManager) {
@@ -40,15 +45,21 @@ void Renderer::update(const GuiManager& guiManager) {
 
 void Renderer::draw()
 {
+    camera.begin();
     ofPushMatrix();
-    ofTranslate(offset_x, offset_y, offset_z);
-    ofRotateXDeg(rotation_x);
-    ofRotateYDeg(rotation_y);
+    if (get_is_mouse_button_pressed()) {
+        ofSetColor(255, 0, 0);
+        ofDrawSphere(screenToScene(get_mouse_current_x(), get_mouse_current_y()), 5);
+    }
+    //ofTranslate(offset_x, offset_y, offset_z);
+    //ofRotateXDeg(rotation_x);
+    //ofRotateYDeg(rotation_y);
     ofSetColor(255, 255, 255);
     for (const auto& i : image)
         i.draw(300, 24, 0);
     graph.draw(get_mouse_press(), get_mouse_current(), get_is_mouse_button_pressed());
     ofPopMatrix();
+    camera.end();
 }
 
 void Renderer::imageExport(const string name, const string extension) const
@@ -64,26 +75,6 @@ void Renderer::imageImport(const string path)
 
     if (image.back().getWidth() > 0 && image.back().getHeight() > 0)
         ofSetWindowShape(image.back().getWidth(), image.back().getHeight());
-}
-
-void Renderer::draw_cursor(float x, float y) const {
-    ofPath cursor;
-    cursor.setFilled(true);
-    cursor.setColor(ofColor::white);
-
-    cursor.setStrokeColor(ofColor::black);
-    cursor.setStrokeWidth(2);
-
-    float scale = 2.0f;
-    cursor.moveTo(x, y);
-    cursor.lineTo(x, y + 8.0f * scale);
-    cursor.lineTo(x + 2.0f * scale, y + 6.0f * scale);
-    cursor.lineTo(x + 4.008744232796342f * scale, y + 9.715579391304935f * scale);
-    cursor.lineTo(x + 5.4363432593879f * scale, y + 9.1395306612768f * scale);
-    cursor.lineTo(x + 3.1822395331907f * scale, y + 5.3325999236994f * scale);
-    cursor.lineTo(x + 6.2378023620357f * scale, y + 5.3826911176149f * scale);
-    cursor.close();
-    cursor.draw();
 }
 
 bool Renderer::get_is_mouse_button_pressed(void) const {
@@ -156,4 +147,24 @@ void Renderer::mouseReleased(void) {
     if (is_mouse_in_draw_area()) {
         graph.add_element(get_mouse_press(), get_mouse_current());
     }
+}
+
+ofVec3f Renderer::screenToScene(int x, int y) {
+    // Step 1: get 2 points: near plane and far plane points
+    ofVec3f screenPosNear(x, y, 0.0f); // z=0 means near plane
+    ofVec3f screenPosFar(x, y, 1.0f);  // z=1 means far plane
+
+    // Step 2: project these two points into world space
+    ofVec3f worldNear = camera.screenToWorld(screenPosNear);
+    ofVec3f worldFar = camera.screenToWorld(screenPosFar);
+
+    // Step 3: create ray from near to far
+    ofVec3f rayDirection = (worldFar - worldNear).normalized();
+
+    // Step 4: intersect ray with Z=0 plane
+    // ray formula: P = O + t * D
+    float t = -worldNear.z / rayDirection.z;
+    ofVec3f intersection = worldNear + t * rayDirection;
+
+    return intersection;
 }

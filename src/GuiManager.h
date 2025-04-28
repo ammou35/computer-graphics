@@ -25,6 +25,7 @@ public:
     std::array<float, 9> transformation3D;
     bool delimitation;
     float lineWidth;
+    ImVec2 tesselation;
     bool projection;
     vector<std::string> imagePath;
     ofImage selected_image;

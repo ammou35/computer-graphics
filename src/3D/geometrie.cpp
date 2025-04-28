@@ -9,11 +9,11 @@ void Geometrie::setup()
     //scale_teapot = 1.5f;
     //rotation_speed = 0.3f;
     //use_rotation = true;
-    //bounding_box = true;  // Affichage de la boîte de délimitation
+    //bounding_box = true;       // Affichage de la boîte de délimitation
     //animation_speed = 0.02f;   // Vitesse d’animation
     //instance_count = 5;        // Nombre d'instances pour la duplication
 
-    //// Activer les effets graphiques
+    // Activer les effets graphiques
     //ofEnableDepthTest();
     //ofEnableLighting();
     //light.enable();
@@ -22,6 +22,21 @@ void Geometrie::setup()
     donut.loadModel("donut.obj");
     plate.loadModel("plate.obj");
     spaghetti_getter.loadModel("spaghetti_getter.obj");
+
+    int w = ofGetWidth();
+    int h = ofGetHeight();
+
+    radius = 10;
+
+    // Génération des points de contrôle en grille 4x4
+    for (int i = 0; i < 4; ++i)
+        for (int j = 0; j < 4; ++j)
+        {
+            float x = w * (0.2f + 0.2f * i);
+            float y = h * (0.2f + 0.2f * j);
+            control_grid[i][j] = ofVec3f(x, y, 0);
+        }
+    is_bezier_curve = true;
 
     // Chargement des shaders
     //shader_lambert.load("lambert_330_vs.glsl", "lambert_330_fs.glsl");
@@ -133,6 +148,82 @@ void Geometrie::draw_spaghetti_getter()
     spaghetti_getter.drawWireframe();
 }
 
+void Geometrie::draw_bezier_curve() {
+    ofSetColor(39, 107, 5);
+    mesh.drawWireframe();
+    update_mesh();
+    // Dessiner les points de contrôle
+    ofSetColor(255, 0, 0);
+    for (int i = 0; i < 4; ++i)
+        for (int j = 0; j < 4; ++j)
+            ofDrawEllipse(control_grid[i][j], radius, radius);
+}
+
 void Geometrie::set_projection_mode(bool mode) {
     projection_mode = mode;
+}
+
+void Geometrie::bezier_bicubic(
+    float u, float v,
+    const ofVec3f control_points[4][4],
+    float& x, float& y, float& z)
+{
+    float bu[4] = {
+      (1 - u) * (1 - u) * (1 - u),
+      3 * u * (1 - u) * (1 - u),
+      3 * u * u * (1 - u),
+      u * u * u
+    };
+
+    float bv[4] = {
+      (1 - v) * (1 - v) * (1 - v),
+      3 * v * (1 - v) * (1 - v),
+      3 * v * v * (1 - v),
+      v * v * v
+    };
+
+    x = y = z = 0.0f;
+
+    for (int i = 0; i < 4; ++i)
+        for (int j = 0; j < 4; ++j)
+        {
+            float b = bu[i] * bv[j];
+            x += b * control_points[i][j].x;
+            y += b * control_points[i][j].y;
+            z += b * control_points[i][j].z;
+        }
+}
+
+void Geometrie::update_mesh()
+{
+    mesh.clear();
+    mesh.setMode(OF_PRIMITIVE_TRIANGLES);
+
+    // Génération des sommets
+    for (int i = 0; i <= resolution_u; ++i)
+    {
+        float u = i / (float)resolution_u;
+        for (int j = 0; j <= resolution_v; ++j)
+        {
+            float v = j / (float)resolution_v;
+            float x, y, z;
+            bezier_bicubic(u, v, control_grid, x, y, z);
+            mesh.addVertex(ofVec3f(x, y, z));
+        }
+    }
+
+    // Indexation du maillage
+    for (int i = 0; i < resolution_u; ++i)
+    {
+        for (int j = 0; j < resolution_v; ++j)
+        {
+            int idx1 = i * (resolution_v + 1) + j;
+            int idx2 = (i + 1) * (resolution_v + 1) + j;
+            int idx3 = idx1 + 1;
+            int idx4 = idx2 + 1;
+
+            mesh.addTriangle(idx1, idx2, idx3);
+            mesh.addTriangle(idx2, idx4, idx3);
+        }
+    }
 }
