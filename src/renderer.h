@@ -68,6 +68,7 @@ public:
     void draw_font(void);
 
     ofVec3f Renderer::screenToScene(int x, int y);
+    ofVec3f Renderer::screenToViewPlane(int x, int y, const ofVec3f& plane_origin, const ofVec3f& plane_normal);
 
 private:
     ofColor bg_color;

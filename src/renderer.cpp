@@ -27,7 +27,7 @@ void Renderer::setup()
     graph.setup();
     camera.setNearClip(0.1f);   // how close something can be before clipping
     camera.setFarClip(10000.f); // how far something can be before clipping
-    camera.setPosition(1000, 0, 1000);     // set manually position
+    camera.setPosition(0, 0, 600);     // set manually position
     camera.lookAt(ofVec3f(0, 0, 0)); // look at the origin
 }
 
@@ -162,3 +162,22 @@ ofVec3f Renderer::screenToScene(int x, int y) {
     return intersection;
 }
 
+ofVec3f Renderer::screenToViewPlane(int x, int y, const ofVec3f& plane_origin, const ofVec3f& plane_normal) {
+    ofVec3f screenPosNear(x, y, 0.0f); // Z = proche
+    ofVec3f screenPosFar(x, y, 1.0f);  // Z = loin
+
+    ofVec3f worldNear = camera.screenToWorld(screenPosNear);
+    ofVec3f worldFar = camera.screenToWorld(screenPosFar);
+
+    ofVec3f rayDirection = (worldFar - worldNear).normalized();
+
+    float denom = plane_normal.dot(rayDirection);
+    if (abs(denom) > 1e-6) {
+        float t = plane_normal.dot(plane_origin - worldNear) / denom;
+        return worldNear + rayDirection * t;
+    }
+    else {
+        // Rayon parallèle au plan : retourner worldNear
+        return worldNear;
+    }
+}

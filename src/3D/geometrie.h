@@ -48,6 +48,8 @@ public:
 	int selected_i;
 	int selected_j;
 	float radius;
+	ofVec3f drag_offset; // pour stocker l'offset initial du clic
+	ofVec3f initial_drag_point;
 	bool is_bezier_curve;
 
 	bool projection_mode = false; // projection orthogonale
