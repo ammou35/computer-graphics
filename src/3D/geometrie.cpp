@@ -54,10 +54,14 @@ void Geometrie::setup()
     // Sélectionner le shader courant
     //shader = shader_lambert;
 
-    lambert_shader.load("shaders/phong-lambert.vert", "shaders/lambert.frag");
-    phong_shader.load("shaders/phong-lambert.vert", "shaders/phong.frag");
-    blinn_phong_shader.load("shaders/phong-lambert.vert", "shaders/blinn-phong.frag");
-    gouraud_shader.load("shaders/gouraud.vert", "shaders/gouraud.frag");
+    lambert_shader.load("shaders/lambert_vs.glsl", "shaders/lambert_fs.glsl");
+    gouraud_shader.load("shaders/gouraud_vs.glsl", "shaders/gouraud_fs.glsl");
+    phong_shader.load("shaders/phong_vs.glsl", "shaders/phong_fs.glsl");
+    blinn_phong_shader.load("shaders/blinn_phong_vs.glsl", "shaders/blinn_phong_fs.glsl");
+
+    // Default shader active
+    shader_active = &blinn_phong_shader;
+    shader_mode = -1;
 
     // Volcanic Magma - Bright, hot, glowing
     material_VolcanicRock.setAmbientColor(ofColor(80, 10, 0));
@@ -109,17 +113,58 @@ void Geometrie::setup()
 
 void Geometrie::update()
 {
-    //// Animation du teapot (ex : oscillation)
-    //float anim_offset = sin(ofGetElapsedTimef() * animation_speed) * 20.0f;
+    switch (shader_mode)
+    {
+    case 1:
+        shader_active = &lambert_shader;
+        shader_name = "Lambert";
+        shader_active->begin();
+        shader_active->setUniform3f("color_ambient", 0.1f, 0.1f, 0.1f);
+        shader_active->setUniform3f("color_diffuse", 0.6f, 0.6f, 0.6f);
+        shader_active->setUniform3f("light_position", light_point.getGlobalPosition());
+        shader_active->end();
+        break;
 
+    case 2:
+        shader_active = &gouraud_shader;
+        shader_name = "Gouraud";
+        shader_active->begin();
+        shader_active->setUniform3f("color_ambient", 0.1f, 0.1f, 0.1f);
+        shader_active->setUniform3f("color_diffuse", 0.6f, 0.6f, 0.0f);
+        shader_active->setUniform3f("color_specular", 1.0f, 1.0f, 0.0f);
+        shader_active->setUniform1f("brightness", 10.0f);
+        shader_active->setUniform3f("light_position", light_point.getGlobalPosition());
+        shader_active->end();
+        break;
 
-    //if (use_rotation)
-    //    teapot.setRotation(0, ofGetFrameNum() * rotation_speed, 0.0f, 1.0f, 0.0f);
+    case 3:
+        shader_active = &phong_shader;
+        shader_name = "Phong";
+        shader_active->begin();
+        shader_active->setUniform3f("color_ambient", 0.1f, 0.1f, 0.1f);
+        shader_active->setUniform3f("color_diffuse", 0.6f, 0.0f, 0.6f);
+        shader_active->setUniform3f("color_specular", 1.0f, 1.0f, 0.0f);
+        shader_active->setUniform1f("brightness", 10.0f);
+        shader_active->setUniform3f("light_position", light_point.getGlobalPosition());
+        shader_active->end();
+        break;
 
-    // Configuration de la lumière
-    //light.setPointLight();
-    //light.setDiffuseColor(255);
-    //light.setGlobalPosition(center_x, center_y, 255.0f);
+    case 4:
+        shader_active = &blinn_phong_shader;
+        shader_name = "Blinn-Phong";
+        shader_active->begin();
+        shader_active->setUniform3f("color_ambient", 0.1f, 0.1f, 0.1f);
+        shader_active->setUniform3f("color_diffuse", 0.0f, 0.6f, 0.6f);
+        shader_active->setUniform3f("color_specular", 1.0f, 1.0f, 0.0f);
+        shader_active->setUniform1f("brightness", 10.0f);
+        shader_active->setUniform3f("light_position", light_point.getGlobalPosition());
+        shader_active->end();
+        break;
+
+    default:
+        shader_active = nullptr;
+        break;
+    }
 }
 
 void Geometrie::draw()
@@ -171,23 +216,22 @@ void Geometrie::draw_bounding_box() const {
 void Geometrie::draw_cube(ofMaterial material)
 {
     ofEnableDepthTest();
+    light_point.enable();
+    ofEnableLighting();
 
     ofBoxPrimitive box;
     box.set(200);
 
-    light_point.enable();
-    ofEnableLighting();
+    box.getMesh().enableNormals();
 
     material.begin();
-    phong_shader.begin();
+    if (shader_active) shader_active->begin();
     box.draw();
-    phong_shader.end();
+    if (shader_active) shader_active->end();
     material.end();
 
     ofDisableLighting();
     light_point.disable();
-    ofDisableDepthTest();
-
     ofDisableDepthTest();
 }
 

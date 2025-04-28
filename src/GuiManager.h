@@ -33,7 +33,7 @@ public:
     bool showGraph3DTransformation;
     bool showGraph3DMats;
     int element3D_material;
-
+    int shader_mode;
 private:
     ofxImGui::Gui gui;
     int typeVectorPrimitive_;
