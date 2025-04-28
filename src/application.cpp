@@ -219,45 +219,93 @@ void Application::mouseMoved(int x, int y ){
 void Application::mouseDragged(int x, int y, int button){
     renderer.set_mouse_current_x(x);
     renderer.set_mouse_current_y(y);
-    if (renderer.graph.geometrie.is_bezier_curve) {
-        if (renderer.graph.geometrie.is_dragging && renderer.graph.geometrie.selected_i >= 0 && renderer.graph.geometrie.selected_j >= 0)
-        {
-            ofVec3f corrected_mouse = renderer.screenToScene(x, y);
 
-            renderer.graph.geometrie.control_grid[renderer.graph.geometrie.selected_i][renderer.graph.geometrie.selected_j].x = corrected_mouse.x;
-            renderer.graph.geometrie.control_grid[renderer.graph.geometrie.selected_i][renderer.graph.geometrie.selected_j].y = corrected_mouse.y;
+    if (renderer.graph.geometrie.is_bezier_curve) {
+        if (renderer.graph.geometrie.is_dragging && renderer.graph.geometrie.selected_i >= 0 && renderer.graph.geometrie.selected_j >= 0) {
+            int i = renderer.graph.geometrie.selected_i;
+            int j = renderer.graph.geometrie.selected_j;
+            ofVec3f plane_origin = renderer.graph.geometrie.initial_drag_point;
+            ofVec3f plane_normal = renderer.camera.getLookAtDir(); // plan perpendiculaire à la vue
+
+            ofVec3f mouse_3d = renderer.screenToViewPlane(x - 300, y - 24, plane_origin, plane_normal);
+
+            // Ajoute l'offset mémorisé
+            ofVec3f new_mouse_pos = renderer.screenToViewPlane(x - 300, y - 24, plane_origin, plane_normal);
+            renderer.graph.geometrie.control_grid[i][j] = new_mouse_pos + renderer.graph.geometrie.drag_offset;
+
             renderer.graph.geometrie.update_mesh();
         }
     }
 }
 
-//--------------------------------------------------------------
-void Application::mousePressed(int x, int y, int button){
-    renderer.set_is_mouse_button_pressed(true);
 
+//--------------------------------------------------------------
+void Application::mousePressed(int x, int y, int button) {
+    renderer.set_is_mouse_button_pressed(true);
     renderer.set_mouse_current_x(x);
     renderer.set_mouse_current_y(y);
-
     renderer.set_mouse_press_x(x);
     renderer.set_mouse_press_y(y);
 
-    if (renderer.graph.geometrie.is_bezier_curve) {
+    if (button == 0) {
+        ofVec3f corrected_mouse = renderer.screenToScene(x - 300, y - 24);
+        corrected_mouse.z -= 600.0f; // Avancer un peu la surface à la création pour qu'on la voie bien
 
-        ofVec3f corrected_mouse = renderer.screenToScene(x, y);
-        for (int i = 0; i < 4; ++i)
-            for (int j = 0; j < 4; ++j)
-            {
-                ofVec3f temp = renderer.graph.geometrie.control_grid[i][j];
-                if (corrected_mouse.distance(renderer.graph.geometrie.control_grid[i][j]) < renderer.graph.geometrie.radius * 4)
-                {
-                    renderer.graph.geometrie.is_dragging = true;
-                    renderer.graph.geometrie.selected_i = i;
-                    renderer.graph.geometrie.selected_j = j;
-                    return;
+        if (renderer.graph.geometrie.is_bezier_curve) {
+            // Tester si on sélectionne un point existant
+            float min_distance = 999999.0f;
+            int selected_i = -1;
+            int selected_j = -1;
+
+            for (int i = 0; i < 4; ++i) {
+                for (int j = 0; j < 4; ++j) {
+                    // Projeter le point de contrôle 3D vers les coordonnées écran
+                    ofVec3f screenPos = renderer.camera.worldToScreen(renderer.graph.geometrie.control_grid[i][j]);
+                    float dx = (x)-screenPos.x;
+                    float dy = (y)-screenPos.y;
+                    float distance = sqrt(dx * dx + dy * dy);
+
+                    if (distance < min_distance && distance < 30.0f) { // Seuil de détection en pixels
+                        min_distance = distance;
+                        selected_i = i;
+                        selected_j = j;
+                    }
                 }
             }
+
+            if (selected_i >= 0 && selected_j >= 0) {
+                renderer.graph.geometrie.selected_i = selected_i;
+                renderer.graph.geometrie.selected_j = selected_j;
+                renderer.graph.geometrie.is_dragging = true;
+
+                ofVec3f point_selected = renderer.graph.geometrie.control_grid[selected_i][selected_j];
+                renderer.graph.geometrie.initial_drag_point = point_selected;
+
+                ofVec3f plane_normal = renderer.camera.getLookAtDir();
+                ofVec3f mouse_pos = renderer.screenToViewPlane(x - 300, y - 24, point_selected, plane_normal);
+
+                renderer.graph.geometrie.drag_offset = point_selected - mouse_pos;
+            }
+
+
+        }
+
+        // Sinon (on n'a pas cliqué sur un point), créer une nouvelle grille si demandé
+        if (guiManager.get_type_vector_primitive() == 20) {
+            for (int i = 0; i < 4; ++i) {
+                for (int j = 0; j < 4; ++j) {
+                    renderer.graph.geometrie.control_grid[i][j].x = corrected_mouse.x + (i - 1.5f) * 100;
+                    renderer.graph.geometrie.control_grid[i][j].y = corrected_mouse.y + (j - 1.5f) * 100;
+                    renderer.graph.geometrie.control_grid[i][j].z = corrected_mouse.z;
+                }
+            }
+            renderer.graph.geometrie.update_mesh();
+            renderer.graph.geometrie.is_bezier_curve = true;
+        }
     }
 }
+
+
 
 //--------------------------------------------------------------
 void Application::mouseReleased(int x, int y, int button){
@@ -286,8 +334,9 @@ void Application::mouseExited(int x, int y){
 }
 
 //--------------------------------------------------------------
-void Application::windowResized(int w, int h){
-
+void Application::windowResized(int w, int h) {
+    renderer.camera.setPosition(0, 0, 600); // on repositionne proprement
+    renderer.camera.lookAt(ofVec3f(0, 0, 0));
 }
 
 //--------------------------------------------------------------

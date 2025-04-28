@@ -27,9 +27,8 @@ void Renderer::setup()
     graph.setup();
     camera.setNearClip(0.1f);   // how close something can be before clipping
     camera.setFarClip(10000.f); // how far something can be before clipping
-    camera.setPosition(ofGetWidth()/2, ofGetHeight()/2, 600);     // set manually position
-    camera.lookAt(ofVec3f(ofGetWidth() / 2, ofGetHeight() / 2, 0)); // look at the origin
-    camera.setScale(1, -1, 1);
+    camera.setPosition(0, 0, 600);     // set manually position
+    camera.lookAt(ofVec3f(0, 0, 0)); // look at the origin
 }
 
 void Renderer::update(const GuiManager& guiManager) {
@@ -46,11 +45,10 @@ void Renderer::update(const GuiManager& guiManager) {
 void Renderer::draw()
 {
     camera.begin();
-    ofPushMatrix();
-    if (get_is_mouse_button_pressed()) {
-        ofSetColor(255, 0, 0);
-        ofDrawSphere(screenToScene(get_mouse_current_x(), get_mouse_current_y()), 5);
-    }
+    //if (get_is_mouse_button_pressed()) {
+    //    ofSetColor(255, 0, 0);
+    //    ofDrawSphere(screenToScene(get_mouse_current_x(), get_mouse_current_y()), 5);
+    //}
     //ofTranslate(offset_x, offset_y, offset_z);
     //ofRotateXDeg(rotation_x);
     //ofRotateYDeg(rotation_y);
@@ -58,7 +56,6 @@ void Renderer::draw()
     for (const auto& i : image)
         i.draw(300, 24, 0);
     graph.draw(get_mouse_press(), get_mouse_current(), get_is_mouse_button_pressed());
-    ofPopMatrix();
     camera.end();
 }
 
@@ -150,21 +147,37 @@ void Renderer::mouseReleased(void) {
 }
 
 ofVec3f Renderer::screenToScene(int x, int y) {
-    // Step 1: get 2 points: near plane and far plane points
-    ofVec3f screenPosNear(x, y, 0.0f); // z=0 means near plane
-    ofVec3f screenPosFar(x, y, 1.0f);  // z=1 means far plane
+    ofVec3f screenPosNear(x, y, 0.0f); // Z proche
+    ofVec3f screenPosFar(x, y, 1.0f);  // Z loin
 
-    // Step 2: project these two points into world space
     ofVec3f worldNear = camera.screenToWorld(screenPosNear);
     ofVec3f worldFar = camera.screenToWorld(screenPosFar);
 
-    // Step 3: create ray from near to far
     ofVec3f rayDirection = (worldFar - worldNear).normalized();
 
-    // Step 4: intersect ray with Z=0 plane
-    // ray formula: P = O + t * D
-    float t = -worldNear.z / rayDirection.z;
+    // intersection avec le plan Y=0
+    float t = -worldNear.y / rayDirection.y;
     ofVec3f intersection = worldNear + t * rayDirection;
 
     return intersection;
+}
+
+ofVec3f Renderer::screenToViewPlane(int x, int y, const ofVec3f& plane_origin, const ofVec3f& plane_normal) {
+    ofVec3f screenPosNear(x, y, 0.0f); // Z = proche
+    ofVec3f screenPosFar(x, y, 1.0f);  // Z = loin
+
+    ofVec3f worldNear = camera.screenToWorld(screenPosNear);
+    ofVec3f worldFar = camera.screenToWorld(screenPosFar);
+
+    ofVec3f rayDirection = (worldFar - worldNear).normalized();
+
+    float denom = plane_normal.dot(rayDirection);
+    if (abs(denom) > 1e-6) {
+        float t = plane_normal.dot(plane_origin - worldNear) / denom;
+        return worldNear + rayDirection * t;
+    }
+    else {
+        // Rayon parallèle au plan : retourner worldNear
+        return worldNear;
+    }
 }

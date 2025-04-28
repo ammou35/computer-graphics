@@ -29,13 +29,18 @@ void Geometrie::setup()
     radius = 10;
 
     // Génération des points de contrôle en grille 4x4
+    float centerX = ofGetWidth() / 2.0f;
+    float centerY = ofGetHeight() / 2.0f;
+
     for (int i = 0; i < 4; ++i)
+    {
         for (int j = 0; j < 4; ++j)
         {
-            float x = w * (0.2f + 0.2f * i);
-            float y = h * (0.2f + 0.2f * j);
-            control_grid[i][j] = ofVec3f(x, y, 0);
+            control_grid[i][j].x = centerX; // écartes un peu
+            control_grid[i][j].y = centerY;
+            control_grid[i][j].z = 0;
         }
+    }
     is_bezier_curve = true;
 
     /*light.setup();
@@ -312,12 +317,12 @@ void Geometrie::update_mesh()
         for (int j = 0; j < resolution_v; ++j)
         {
             int idx1 = i * (resolution_v + 1) + j;
-            int idx2 = (i + 1) * (resolution_v + 1) + j;
+            int idx2 = (i+1) * (resolution_v + 1) + j;
             int idx3 = idx1 + 1;
             int idx4 = idx2 + 1;
 
-            mesh.addTriangle(idx1, idx2, idx3);
-            mesh.addTriangle(idx2, idx4, idx3);
+            mesh.addTriangle(idx1, idx2, idx4);
+            mesh.addTriangle(idx1, idx4, idx3);
         }
     }
 }

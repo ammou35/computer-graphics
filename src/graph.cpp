@@ -96,7 +96,7 @@ void Graph::draw(const std::array<int, 2>& mouse_press, const std::array<int, 2>
 		}
 	}
 	ofPushMatrix();
-	ofTranslate(ofGetWidth() / 2, ofGetHeight() / 2, 0);
+	//ofTranslate(ofGetWidth() / 2, ofGetHeight() / 2, 0);
 	for (int i = 0; i < buffer_count; i++) {
 		ofPushMatrix();
 		ofTranslate(element3D[i].transformation[0], element3D[i].transformation[1], element3D[i].transformation[2]);

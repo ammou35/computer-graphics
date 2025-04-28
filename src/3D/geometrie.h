@@ -49,6 +49,8 @@ public:
 	// ofColor color_ambient;
 	// ofColor color_diffuse;
 
+	float selected_point_depth = 0.0f;
+
 	// Bézier bicubique
 	ofVec3f control_grid[4][4];
 	int resolution_u = 20;
@@ -59,6 +61,8 @@ public:
 	int selected_i;
 	int selected_j;
 	float radius;
+	ofVec3f drag_offset; // pour stocker l'offset initial du clic
+	ofVec3f initial_drag_point;
 	bool is_bezier_curve;
 
 	bool projection_mode = false; // projection orthogonale
