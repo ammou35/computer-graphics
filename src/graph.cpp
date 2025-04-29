@@ -98,7 +98,6 @@ void Graph::update(const ofColor& stroke_color, const ofColor& fill_color, const
 
 			if (element3D[index].type == ElementScene3DType::point_light || element3D[index].type == ElementScene3DType::directional_light || element3D[index].type == ElementScene3DType::spot_light) {
 				element3D[index].lightAttribute.light.setPosition(element3D[index].transformation[0], element3D[index].transformation[1], element3D[index].transformation[2]);
-				element3D[index].lightAttribute.light.draw();
 			}
 
 			if (bounding_box) {
@@ -213,6 +212,15 @@ void Graph::draw(const std::array<int, 2>& mouse_press, const std::array<int, 2>
 				break;
 			case ElementScene3DType::bezier_curve:
 				geometrie.draw_bezier_curve();
+				break;
+			case ElementScene3DType::directional_light:
+				element3D[i].lightAttribute.light.draw();
+				break;
+			case ElementScene3DType::point_light:
+				element3D[i].lightAttribute.light.draw();
+				break;
+			case ElementScene3DType::spot_light:
+				element3D[i].lightAttribute.light.draw();
 				break;
 			default:
 				break;
@@ -354,6 +362,7 @@ void Graph::add_element3D(const std::array<int, 2>& mouse_press, const std::arra
 		element3D[index].lightAttribute.light.setOrientation(element3D[index].lightAttribute.orientation);
 		element3D[index].lightAttribute.light.setSpotConcentration(element3D[index].lightAttribute.concentration);
 		element3D[index].lightAttribute.light.setSpotlightCutOff(element3D[index].lightAttribute.lightCutOff);
+		element3D[index].lightAttribute.light.setPosition(mouse_press[0], mouse_press[1], 0);
 		element3D[index].lightAttribute.light.setSpotlight();
 	}
 	else if (get_draw_shape_3D() == ElementScene3DType::point_light) {
