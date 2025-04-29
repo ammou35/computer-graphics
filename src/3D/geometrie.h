@@ -9,6 +9,7 @@
 
 enum class ElementScene3DType { none, cube, sphere, cylinder, cone, donut, plate, spaghetti_getter, bezier_curve, ambiant, directional_light, point_light, spot_light };
 enum class ElementScene3DMaterial { none, volcanicRock, frozenCrystal, mossyStone, neonTech, ancientBronze };
+enum class ElementScene3DTexture { none, wood, sand, briks, honeycomb, sponge };
 
 struct LightAttribute {
 	ofLight light;
@@ -26,8 +27,8 @@ struct ElementScene3D {
 	std::array<float, 9> transformation; // Translation(3), rotation(3), proportion(3)
 	bool is_selected;
 	bool bounding_box;
-	//texture
 	ElementScene3DMaterial material;
+	ElementScene3DTexture texture;
 	LightAttribute lightAttribute;
 };
 
@@ -40,6 +41,13 @@ public:
 	ofxAssimpModelLoader donut;
 	ofxAssimpModelLoader plate;
 	ofxAssimpModelLoader spaghetti_getter;
+
+	ofImage texture_None;
+	ofImage texture_Wood;
+	ofImage texture_Sand;
+	ofImage texture_Briks;
+	ofImage texture_Honeycomb;
+	ofImage texture_Sponge;
 
 	ofMaterial material_VolcanicRock;
 	ofMaterial material_FrozenCrystal;
@@ -59,7 +67,7 @@ public:
 
 	float selected_point_depth = 0.0f;
 
-	// Bézier bicubique
+	// Bï¿½zier bicubique
 	ofVec3f control_grid[4][4];
 	int resolution_u = 20;
 	int resolution_v = 20;
@@ -85,10 +93,10 @@ public:
 	void update();
 	void draw();
 
-	void draw_cube(ofMaterial material);   // Fonction pour ajouter un cube
-	void draw_sphere() const; // Fonction pour ajouter une sphère
+	void draw_cube(ofMaterial material, ofImage img);   // Fonction pour ajouter un cube
+	void draw_sphere(ofMaterial material, ofImage img); // Fonction pour ajouter une sphï¿½re
 	void draw_cylinder() const; // Fonction pour ajouter un cylindre
-	void draw_cone() const; // Fonction pour ajouter un cône
+	void draw_cone() const; // Fonction pour ajouter un cï¿½ne
 
 	void draw_donut(); // Fonction pour ajouter un donut
 	void draw_plate(); // Fonction pour ajouter une assiette

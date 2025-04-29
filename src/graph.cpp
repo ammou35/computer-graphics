@@ -31,7 +31,7 @@ void Graph::setup() {
 	}
 }
 
-void Graph::update(const ofColor& stroke_color, const ofColor& fill_color, const int& type_vector_primitive, const std::array<float, 6>& transformation, const std::array<float, 9>&transformation3D, const int& element3D_material) {
+void Graph::update(const ofColor& stroke_color, const ofColor& fill_color, const int& type_vector_primitive, const std::array<float, 6>& transformation, const std::array<float, 9>&transformation3D, const int& element3D_material, const int& element3D_texture) {
 	set_draw_shape(type_vector_primitive);
 	dessinVectoriel.update(stroke_color, fill_color, type_vector_primitive);
 	for (int index = 0; index < buffer_count; index++) {
@@ -70,6 +70,30 @@ void Graph::update(const ofColor& stroke_color, const ofColor& fill_color, const
 				break;
 			}
 			element3D[index].material = elementScene3DMaterial;
+
+			ElementScene3DTexture elementScene3DTexture;
+			switch (element3D_texture) {
+			case -1:
+				elementScene3DTexture = ElementScene3DTexture::none;
+				break;
+			case 1:
+				elementScene3DTexture = ElementScene3DTexture::wood;
+				break;
+			case 2:
+				elementScene3DTexture = ElementScene3DTexture::sand;
+				break;
+			case 3:
+				elementScene3DTexture = ElementScene3DTexture::briks;
+				break;
+			case 4:
+				elementScene3DTexture = ElementScene3DTexture::honeycomb;
+				break;
+			case 5:
+				elementScene3DTexture = ElementScene3DTexture::sponge;
+				break;
+			}
+			element3D[index].texture = elementScene3DTexture;
+
 			element3D[index].transformation = transformation3D;
 			if (bounding_box) {
 				element3D[index].bounding_box = true;
@@ -108,6 +132,7 @@ void Graph::draw(const std::array<int, 2>& mouse_press, const std::array<int, 2>
 		ofNoFill();
 
 		ofMaterial material;
+		
 		switch (element3D[i].material) {
 			case ElementScene3DMaterial::none:
 				material = geometrie.material_None;
@@ -131,15 +156,38 @@ void Graph::draw(const std::array<int, 2>& mouse_press, const std::array<int, 2>
 				material = geometrie.material_None;
 				break;
 		}
-
+		ofImage texture;
+		switch (element3D[i].texture) {
+		case ElementScene3DTexture::none:
+			texture = geometrie.texture_None;
+			break;
+		case ElementScene3DTexture::wood:
+			texture = geometrie.texture_Wood;
+			break;
+		case ElementScene3DTexture::sand:
+			texture = geometrie.texture_Sand;
+			break;
+		case ElementScene3DTexture::briks:
+			texture = geometrie.texture_Briks;
+			break;
+		case ElementScene3DTexture::honeycomb:
+			texture = geometrie.texture_Honeycomb;
+			break;
+		case ElementScene3DTexture::sponge:
+			texture = geometrie.texture_Sponge;
+			break;
+		default:
+			texture = geometrie.texture_None;
+			break;
+		}
 		switch (element3D[i].type) {
 			case ElementScene3DType::none:
 				break;
 			case ElementScene3DType::cube:
-				geometrie.draw_cube(material);
+				geometrie.draw_cube(material, texture);
 				break;
 			case ElementScene3DType::sphere:
-				geometrie.draw_sphere();
+				geometrie.draw_sphere(material, texture);
 				break;
 			case ElementScene3DType::cylinder:
 				geometrie.draw_cylinder();

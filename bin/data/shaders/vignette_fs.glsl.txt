@@ -1,0 +1,16 @@
+#version 330
+uniform sampler2D image;
+in vec2 surface_texcoord;
+out vec4 outputColor;
+
+void main() {
+    vec4 color = texture(image, surface_texcoord);
+    
+    // Centre les coordonnées et crée un cercle
+    vec2 uv = (surface_texcoord - 0.5) * 2.0;
+    float vignette = 1.0 - smoothstep(0.5, 1.5, length(uv));
+    
+    // Applique avec intensité réglable
+    vignette = mix(1.0, vignette, 0.8); // 0.8 = force de l'effet
+    outputColor = color * vignette;
+}
