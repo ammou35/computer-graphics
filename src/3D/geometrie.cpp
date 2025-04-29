@@ -23,20 +23,17 @@ void Geometrie::setup()
     plate.loadModel("plate.obj");
     spaghetti_getter.loadModel("spaghetti_getter.obj");
 
-    int w = ofGetWidth();
-    int h = ofGetHeight();
-
     radius = 10;
 
     // Génération des points de contrôle en grille 4x4
-    float centerX = ofGetWidth() / 2.0f;
-    float centerY = ofGetHeight() / 2.0f;
+    float centerX = 0;
+    float centerY = 0;
 
     for (int i = 0; i < 4; ++i)
     {
         for (int j = 0; j < 4; ++j)
         {
-            control_grid[i][j].x = centerX; // écartes un peu
+            control_grid[i][j].x = centerX;
             control_grid[i][j].y = centerY;
             control_grid[i][j].z = 0;
         }
@@ -103,12 +100,18 @@ void Geometrie::setup()
     material_AncientBronze.setSpecularColor(ofColor(200, 150, 80));
     material_AncientBronze.setShininess(25.0f);  // Soft metallic shine
 
-
     material_None.setAmbientColor(ofColor(255, 255, 255));
     material_None.setDiffuseColor(ofColor(255, 255, 255));
     material_None.setSpecularColor(ofColor(0, 0, 0));
     material_None.setEmissiveColor(ofColor(0, 0, 0));
     material_None.setShininess(0.0f);
+    
+	texture_None.load("textures/none.jpg");
+	texture_Wood.load("textures/wood.jpg");
+	texture_Sand.load("textures/sand.jpg");
+	texture_Briks.load("textures/brick.jpg");
+	texture_Honeycomb.load("textures/honeycomb.png");
+	texture_Sponge.load("textures/sponge.jpg");
 
     light_point.setDiffuseColor(ofColor(255, 255, 255));
     light_point.setSpecularColor(ofColor(191, 191, 191));
@@ -218,7 +221,7 @@ void Geometrie::draw_bounding_box() const {
 }
 
 // fonction qui dessine un cube
-void Geometrie::draw_cube(ofMaterial material)
+void Geometrie::draw_cube(ofMaterial material, ofImage img)
 {
     ofEnableDepthTest();
     light_point.enable();
@@ -227,11 +230,27 @@ void Geometrie::draw_cube(ofMaterial material)
     ofBoxPrimitive box;
     box.set(200);
 
-    box.getMesh().enableNormals();
+    ofMesh& mesh = box.getMesh();
+
+    float cubeSize = 2.0f; // taille du cube
+    float textureSize = std::max(img.getWidth(), img.getHeight()); // plus grand côté de l'image
+
+    // Le facteur doit être "combien de fois" la texture couvre la taille du cube
+    float repeatFactor = textureSize / cubeSize;
+
+    for (int i = 0; i < mesh.getNumTexCoords(); ++i) {
+        ofVec2f texCoord = mesh.getTexCoord(i);
+        texCoord *= repeatFactor;
+        mesh.setTexCoord(i, texCoord);
+    }
 
     material.begin();
     if (shader_active) shader_active->begin();
-    box.draw();
+
+    img.getTexture().bind();
+    box.drawFaces();
+    img.getTexture().unbind();
+
     if (shader_active) shader_active->end();
     material.end();
 
@@ -242,9 +261,27 @@ void Geometrie::draw_cube(ofMaterial material)
 
 
 // fonction qui dessine une sphère
-void Geometrie::draw_sphere() const
+void Geometrie::draw_sphere(ofMaterial material, ofImage img)
 {
-    ofDrawSphere(0, 0, 0, 50);
+    ofEnableDepthTest();
+    light_point.enable();
+    ofEnableLighting();
+
+    ofSpherePrimitive sphere;
+    sphere.set(50, 10);
+    
+    material.begin();
+    if (shader_active) shader_active->begin();
+
+    if (shader_active) shader_active->end();
+    img.getTexture().bind();
+    sphere.drawFaces();
+    img.getTexture().unbind();
+    material.end();
+
+    ofDisableLighting();
+    light_point.disable();
+    ofDisableDepthTest();
 }
 
 // fonction qui dessine un cylindre
@@ -265,13 +302,14 @@ void Geometrie::draw_donut()
     // configurer le matériau du teapot
     ofEnableDepthTest();
 
-
-    // dessiner un teapot
     donut.draw(OF_MESH_FILL);
+    //donutImage.getTexture().bind();
+    //donut.drawFaces();
+    //donutImage.getTexture().unbind();
+
     // désactiver le matériau
     //material_donut.end();
     //donut.drawWireframe();
-    //donut.drawFaces();
     ofDisableDepthTest();
 }
 

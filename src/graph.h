@@ -36,7 +36,7 @@ public:
 	int element3D_buffer_size;
 
 	void draw(const std::array<int, 2> &mouse_press, const std::array<int, 2> &mouse_current, const bool &is_mouse_button_pressed);
-	void update(const ofColor &stroke_color, const ofColor &fill_color, const int &type_vector_primitive, const std::array<float, 6> &transformation, const std::array<float, 9>& transformation3D, const int& element3D_material);
+	void update(const ofColor &stroke_color, const ofColor &fill_color, const int &type_vector_primitive, const std::array<float, 6> &transformation, const std::array<float, 9>& transformation3D, const int& element3D_material, const int& element3D_texture);
 	void setup();
 	void add_element(const std::array<int, 2> &mouse_press, const std::array<int, 2> &mouse_current);
 	void add_element2D(const std::array<int, 2> &mouse_press, const std::array<int, 2> &mouse_current);

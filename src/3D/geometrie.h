@@ -9,14 +9,15 @@
 
 enum class ElementScene3DType { none, cube, sphere, cylinder, cone, donut, plate, spaghetti_getter, bezier_curve};
 enum class ElementScene3DMaterial { none, volcanicRock, frozenCrystal, mossyStone, neonTech, ancientBronze };
+enum class ElementScene3DTexture { none, wood, sand, briks, honeycomb, sponge };
 
 struct ElementScene3D {
 	ElementScene3DType type;
 	std::array<float, 9> transformation; // Translation(3), rotation(3), proportion(3)
 	bool is_selected;
 	bool bounding_box;
-	//texture
 	ElementScene3DMaterial material;
+	ElementScene3DTexture texture;
 };
 
 class Geometrie
@@ -28,6 +29,13 @@ public:
 	ofxAssimpModelLoader donut;
 	ofxAssimpModelLoader plate;
 	ofxAssimpModelLoader spaghetti_getter;
+
+	ofImage texture_None;
+	ofImage texture_Wood;
+	ofImage texture_Sand;
+	ofImage texture_Briks;
+	ofImage texture_Honeycomb;
+	ofImage texture_Sponge;
 
 	ofMaterial material_VolcanicRock;
 	ofMaterial material_FrozenCrystal;
@@ -73,8 +81,8 @@ public:
 	void update();
 	void draw();
 
-	void draw_cube(ofMaterial material);   // Fonction pour ajouter un cube
-	void draw_sphere() const; // Fonction pour ajouter une sphère
+	void draw_cube(ofMaterial material, ofImage img);   // Fonction pour ajouter un cube
+	void draw_sphere(ofMaterial material, ofImage img); // Fonction pour ajouter une sphère
 	void draw_cylinder() const; // Fonction pour ajouter un cylindre
 	void draw_cone() const; // Fonction pour ajouter un cône
 
