@@ -95,6 +95,9 @@ public :
 	void apply_transform(VectorPrimitive* ptr, const std::array<float, 6>& transformation);
 
 	~DessinVectoriel();
+
+	ofVec2f mouse_press_w;
+	ofVec2f mouse_current_w;
 private:
 	VectorPrimitiveType draw_mode;
 	float* param_curve_buffer;

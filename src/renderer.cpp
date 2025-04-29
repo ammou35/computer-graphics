@@ -42,6 +42,8 @@ void Renderer::update(const GuiManager& guiManager) {
     center_x = ofGetWidth() / 2.0f;
     center_y = ofGetHeight() / 2.0f;
     graph.geometrie.update();
+    ofVec3f worldPress = screenToScene(mouse_press[0], mouse_press[1]);
+    ofVec3f worldCurrent = screenToScene(mouse_current[0], mouse_current[1]);
 }
 
 void Renderer::draw()
@@ -58,8 +60,8 @@ void Renderer::draw()
     for (const auto& i : image)
         i.draw(300, 24, 0);
     graph.draw(get_mouse_press(), get_mouse_current(), get_is_mouse_button_pressed());
-    camera.end();
     graph.dessinVectoriel.draw(get_mouse_press(), get_mouse_current(), get_is_mouse_button_pressed());
+    camera.end();
 }
 
 void Renderer::imageExport(const string name, const string extension) const
@@ -145,7 +147,14 @@ void Renderer::draw_font(void) {
 
 void Renderer::mouseReleased(void) {
     if (is_mouse_in_draw_area()) {
-        graph.add_element(get_mouse_press(), get_mouse_current());
+        ofVec3f plane_origin(0, 0, 0);
+        ofVec3f plane_normal = camera.getLookAtDir();
+        ofVec3f worldPress = screenToViewPlane(get_mouse_press()[0], get_mouse_press()[1], plane_origin, plane_normal);
+        ofVec3f worldCurrent = screenToViewPlane(get_mouse_current()[0], get_mouse_current()[1], plane_origin, plane_normal);
+
+        std::array<int, 2> mouse_press_w = { worldPress.x, worldPress.y };
+        std::array<int, 2> mouse_current_w = { worldCurrent.x, worldCurrent.y };
+        graph.add_element(mouse_press_w, mouse_current_w);
     }
 }
 
