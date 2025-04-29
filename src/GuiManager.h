@@ -35,6 +35,7 @@ public:
     int element3D_material;
     int shader_mode;
     int element3D_texture;
+    int element3D_filtre;
 private:
     ofxImGui::Gui gui;
     int typeVectorPrimitive_;

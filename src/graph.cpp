@@ -350,6 +350,7 @@ void Graph::add_element3D(const std::array<int, 2>& mouse_press, const std::arra
 		element3D[index].lightAttribute.light.setPointLight();
 	}
 	else if (get_draw_shape_3D() == ElementScene3DType::directional_light) {
+		element3D[index].lightAttribute.light;
 		element3D[index].lightAttribute.diffuseColor = ofColor(31, 255, 31);
 		element3D[index].lightAttribute.specularColor = ofColor(191, 191, 191);
 		element3D[index].lightAttribute.orientation = ofVec3f(0.0f, 0.0f, 0.0f);
