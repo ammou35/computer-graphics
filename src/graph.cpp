@@ -48,7 +48,7 @@ void Graph::update(const ofColor& stroke_color, const ofColor& fill_color, const
 			}
 		}
 		if (element3D[index].is_selected) {
-			ElementScene3DMaterial elementScene3DMaterial;
+			ElementScene3DMaterial elementScene3DMaterial = ElementScene3DMaterial::none;
 			switch (element3D_material) {
 			case -1:
 				elementScene3DMaterial = ElementScene3DMaterial::none;
@@ -86,11 +86,9 @@ void Graph::draw(const std::array<int, 2>& mouse_press, const std::array<int, 2>
 	for (int i = 0; i < buffer_count; i++) {
 		if (element2D[i].type == ElementScene2DType::image) {
 			ofPushMatrix();
-			ofTranslate(element2D[i].image_position[0] + images[element2D[i].image_nb].getWidth()/2, element2D[i].image_position[1] + images[element2D[i].image_nb].getHeight()/2);
 			ofTranslate(element2D[i].transformation[0], element2D[i].transformation[1], element2D[i].transformation[2]);
 			ofRotateDeg(element2D[i].transformation[3]);
 			ofScale(element2D[i].transformation[4], element2D[i].transformation[5]);
-			ofTranslate(- element2D[i].image_position[0] - images[element2D[i].image_nb].getWidth()/2, - element2D[i].image_position[1] - images[element2D[i].image_nb].getHeight()/2);
 			images[element2D[i].image_nb].draw(element2D[i].image_position[0], element2D[i].image_position[1]);
 			ofPopMatrix();
 		}
@@ -287,6 +285,41 @@ void Graph::add_element3D(const std::array<int, 2>& mouse_press, const std::arra
 	element3D[index].is_selected = false;
 	element3D[index].material = ElementScene3DMaterial::none;
 
+	if (get_draw_shape_3D() == ElementScene3DType::spot_light) {
+		element3D[index].lightAttribute.diffuseColor = ofColor(191, 191, 191);
+		element3D[index].lightAttribute.specularColor = ofColor(191, 191, 191);
+		element3D[index].lightAttribute.orientation = ofVec3f(0.0f, 0.0f, 0.0f);
+		element3D[index].lightAttribute.concentration = 2.0f;
+		element3D[index].lightAttribute.lightCutOff = 30.0f;
+		element3D[index].lightAttribute.light.setSpotlight();
+	}
+	else if (get_draw_shape_3D() == ElementScene3DType::point_light) {
+		element3D[index].lightAttribute.diffuseColor = ofColor(255, 255, 255);
+		element3D[index].lightAttribute.specularColor = ofColor(191, 191, 191);
+		element3D[index].lightAttribute.orientation = ofVec3f(0.0f, 0.0f, 0.0f);
+		element3D[index].lightAttribute.concentration = 0.0f;
+		element3D[index].lightAttribute.lightCutOff = 0.0f;
+		element3D[index].lightAttribute.light.setPointLight();
+	}
+	else if (get_draw_shape_3D() == ElementScene3DType::directional_light) {
+		element3D[index].lightAttribute.diffuseColor = ofColor(31, 255, 31);
+		element3D[index].lightAttribute.specularColor = ofColor(191, 191, 191);
+		element3D[index].lightAttribute.orientation = ofVec3f(0.0f, 0.0f, 0.0f);
+		element3D[index].lightAttribute.concentration = 0.0f;
+		element3D[index].lightAttribute.lightCutOff = 0.0f;
+		element3D[index].lightAttribute.light.setDiffuseColor(element3D[index].lightAttribute.diffuseColor);
+		element3D[index].lightAttribute.light.setSpecularColor(element3D[index].lightAttribute.specularColor);
+		element3D[index].lightAttribute.light.setOrientation(element3D[index].lightAttribute.orientation);
+		element3D[index].lightAttribute.light.setDirectional();
+	}
+	else if (get_draw_shape_3D() == ElementScene3DType::ambiant) {
+		element3D[index].lightAttribute.diffuseColor = ofColor(255, 255, 255);
+		element3D[index].lightAttribute.specularColor = ofColor(191, 191, 191);
+		element3D[index].lightAttribute.orientation = ofVec3f(0.0f, 0.0f, 0.0f);
+		element3D[index].lightAttribute.concentration = 0.0f;
+		element3D[index].lightAttribute.lightCutOff = 0.0f;
+	}
+
 	if (bounding_box) {
 		element3D[index].bounding_box = true;
 	}
@@ -341,6 +374,10 @@ void Graph::set_draw_shape(const int& type_ElementScene) {
 	case 18:  draw_shape_3D = ElementScene3DType::plate; break;
 	case 19:  draw_shape_3D = ElementScene3DType::spaghetti_getter; break;
 	case 20:  draw_shape_3D = ElementScene3DType::bezier_curve; break;
+	case 21:  draw_shape_3D = ElementScene3DType::ambiant; break;
+	case 22:  draw_shape_3D = ElementScene3DType::directional_light; break;
+	case 23:  draw_shape_3D = ElementScene3DType::point_light; break;
+	case 24:  draw_shape_3D = ElementScene3DType::spot_light; break;
 	default: draw_shape_2D = ElementScene2DType::none; break;
 	}
 
@@ -348,7 +385,7 @@ void Graph::set_draw_shape(const int& type_ElementScene) {
 		draw_shape_2D = ElementScene2DType::image;
 		image_nb = type_ElementScene - 20;
 	}
-	if (type_ElementScene > 12 && type_ElementScene < 21) {
+	if (type_ElementScene > 12 && type_ElementScene < 24) {
 		draw_mode = 3;
 	}
 	else {

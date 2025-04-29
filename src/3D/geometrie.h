@@ -7,8 +7,19 @@
 #include "ofMain.h"
 #include "ofxAssimpModelLoader.h"
 
-enum class ElementScene3DType { none, cube, sphere, cylinder, cone, donut, plate, spaghetti_getter, bezier_curve};
+enum class ElementScene3DType { none, cube, sphere, cylinder, cone, donut, plate, spaghetti_getter, bezier_curve, ambiant, directional_light, point_light, spot_light };
 enum class ElementScene3DMaterial { none, volcanicRock, frozenCrystal, mossyStone, neonTech, ancientBronze };
+
+struct LightAttribute {
+	ofLight light;
+	ElementScene3DType type;
+	ofColor diffuseColor;
+	ofColor specularColor;
+	ofVec3f position;
+	ofVec3f orientation;
+	float concentration;
+	float lightCutOff;
+};
 
 struct ElementScene3D {
 	ElementScene3DType type;
@@ -17,6 +28,7 @@ struct ElementScene3D {
 	bool bounding_box;
 	//texture
 	ElementScene3DMaterial material;
+	LightAttribute lightAttribute;
 };
 
 class Geometrie

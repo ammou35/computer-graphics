@@ -435,7 +435,7 @@ void GuiManager::draw(ElementScene2D* element2D, ElementScene3D* element3D, cons
                 }
             }
         }
-
+        ImGui::SetNextItemOpen(true, ImGuiCond_Always);
         if (ImGui::TreeNode("3D elements")) {
             for (int i = 0; i < 1000; i++) {
                 if (element3D[i].type != ElementScene3DType::none) {
@@ -552,6 +552,27 @@ void GuiManager::draw(ElementScene2D* element2D, ElementScene3D* element3D, cons
                             }
                             if (ImGui::RadioButton("Ancient Bronze", element3D_material == 5)) {
                                 element3D_material = 5;
+                            }
+                            ImGui::EndTabItem();
+                        }
+                        if (ImGui::BeginTabItem("Textures")) {
+                            if (ImGui::RadioButton("None", element3D_texture == -1)) {
+                                element3D_texture = -1;
+                            }
+                            if (ImGui::RadioButton("Wood", element3D_texture == 1)) {
+                                element3D_texture = 1;
+                            }
+                            if (ImGui::RadioButton("Sand", element3D_texture == 2)) {
+                                element3D_texture = 2;
+                            }
+                            if (ImGui::RadioButton("Bricks", element3D_texture == 3)) {
+                                element3D_texture = 3;
+                            }
+                            if (ImGui::RadioButton("Honeycomb", element3D_texture == 4)) {
+                                element3D_texture = 4;
+                            }
+                            if (ImGui::RadioButton("Spong", element3D_texture == 5)) {
+                                element3D_texture = 5;
                             }
                             ImGui::EndTabItem();
                         }
