@@ -55,6 +55,9 @@ public:
 	bool bounding_box;
 	int image_nb;
 
+	void light_on();
+	void light_off();
+
 	~Graph();
 private:
 	int draw_mode;

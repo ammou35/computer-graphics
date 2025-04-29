@@ -44,11 +44,6 @@ void Geometrie::setup()
     light.setPosition(300, 300, 300);
     light.enable();*/
 
-    ofColor light_ambient;
-    light_ambient.set(127, 127, 127);
-
-    ofSetGlobalAmbientColor(light_ambient);
-
     // Chargement des shaders
     //shader_lambert.load("lambert_330_vs.glsl", "lambert_330_fs.glsl");
     //shader_normal.load("draw_normal_330_vs.glsl", "draw_normal_330_fs.glsl");
@@ -112,11 +107,6 @@ void Geometrie::setup()
 	texture_Briks.load("textures/brick.jpg");
 	texture_Honeycomb.load("textures/honeycomb.png");
 	texture_Sponge.load("textures/sponge.jpg");
-
-    light_point.setDiffuseColor(ofColor(255, 255, 255));
-    light_point.setSpecularColor(ofColor(191, 191, 191));
-    light_point.setPointLight();
-    light_point.setPosition(300, 300, 300);
 }
 
 void Geometrie::update()
@@ -224,8 +214,6 @@ void Geometrie::draw_bounding_box() const {
 void Geometrie::draw_cube(ofMaterial material, ofImage img)
 {
     ofEnableDepthTest();
-    light_point.enable();
-    ofEnableLighting();
 
     ofBoxPrimitive box;
     box.set(200);
@@ -253,9 +241,6 @@ void Geometrie::draw_cube(ofMaterial material, ofImage img)
 
     if (shader_active) shader_active->end();
     material.end();
-
-    ofDisableLighting();
-    light_point.disable();
     ofDisableDepthTest();
 }
 
@@ -264,8 +249,6 @@ void Geometrie::draw_cube(ofMaterial material, ofImage img)
 void Geometrie::draw_sphere(ofMaterial material, ofImage img)
 {
     ofEnableDepthTest();
-    light_point.enable();
-    ofEnableLighting();
 
     ofSpherePrimitive sphere;
     sphere.set(50, 10);
@@ -279,8 +262,6 @@ void Geometrie::draw_sphere(ofMaterial material, ofImage img)
     img.getTexture().unbind();
     material.end();
 
-    ofDisableLighting();
-    light_point.disable();
     ofDisableDepthTest();
 }
 

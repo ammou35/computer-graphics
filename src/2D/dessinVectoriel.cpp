@@ -54,11 +54,9 @@ void DessinVectoriel::draw(const std::array<int, 2>& mouse_press, const std::arr
     for (index = 0; index < buffer_count; ++index)
     {
         ofPushMatrix();
-        ofTranslate(shapes[index].center[0], shapes[index].center[1]);
         ofTranslate(shapes[index].transformation[0], shapes[index].transformation[1], shapes[index].transformation[2]);
         ofRotateDeg(shapes[index].transformation[3]);
         ofScale(shapes[index].transformation[4], shapes[index].transformation[5]);
-        ofTranslate(-shapes[index].center[0], -shapes[index].center[1]);
         switch (shapes[index].type)
         {
         case VectorPrimitiveType::pixel:

@@ -35,7 +35,7 @@ void GuiManager::update(Graph& graph) {
         imagePath.pop_back();
     }
     int existe_image_selectionne = 0;
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < 30; i++) {
         if (graph.element2D[i].type == ElementScene2DType::image && graph.element2D[i].is_selected) {
             existe_image_selectionne = 1;
             if (!is_selected_image) {
@@ -396,7 +396,7 @@ void GuiManager::draw(ElementScene2D* element2D, ElementScene3D* element3D, cons
 
     if (ImGui::CollapsingHeader("Graph", ImGuiTreeNodeFlags_DefaultOpen)) {
         if (ImGui::TreeNode("2D elements")) {
-            for (int i = 0; i < 1000; i++) {
+            for (int i = 0; i < 30; i++) {
                 if (element2D[i].type != ElementScene2DType::none) {
                     ImGui::PushID(i);
                     if (ImGui::Selectable(element2D[i].name, element2D[i].is_selected)) {
@@ -438,7 +438,7 @@ void GuiManager::draw(ElementScene2D* element2D, ElementScene3D* element3D, cons
         }
         ImGui::SetNextItemOpen(true, ImGuiCond_Always);
         if (ImGui::TreeNode("3D elements")) {
-            for (int i = 0; i < 1000; i++) {
+            for (int i = 0; i < 30; i++) {
                 if (element3D[i].type != ElementScene3DType::none) {
                     ImGui::PushID(i);
                     char nom[20];
@@ -468,6 +468,18 @@ void GuiManager::draw(ElementScene2D* element2D, ElementScene3D* element3D, cons
                         break;
                     case ElementScene3DType::bezier_curve:
                         strcpy(nom, "Bezier curve");
+                        break;
+                    case ElementScene3DType::ambiant:
+                        strcpy(nom, "Ambiant light");
+                        break;
+                    case ElementScene3DType::directional_light:
+                        strcpy(nom, "Directional light");
+                        break;
+                    case ElementScene3DType::point_light:
+                        strcpy(nom, "Point light");
+                        break;
+                    case ElementScene3DType::spot_light:
+                        strcpy(nom, "Spot light");
                         break;
                     default:
                         break;

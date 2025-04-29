@@ -59,6 +59,7 @@ void Renderer::draw()
         i.draw(300, 24, 0);
     graph.draw(get_mouse_press(), get_mouse_current(), get_is_mouse_button_pressed());
     camera.end();
+    graph.dessinVectoriel.draw(get_mouse_press(), get_mouse_current(), get_is_mouse_button_pressed());
 }
 
 void Renderer::imageExport(const string name, const string extension) const

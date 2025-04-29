@@ -314,6 +314,10 @@ void Application::mousePressed(int x, int y, int button) {
             renderer.graph.geometrie.update_mesh();
             renderer.graph.geometrie.is_bezier_curve = true;
         }
+        renderer.set_mouse_current_x(x);
+        renderer.set_mouse_current_y(y);
+        renderer.set_mouse_press_x(x);
+        renderer.set_mouse_press_y(y);
     }
 }
 
