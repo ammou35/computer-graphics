@@ -108,4 +108,6 @@ public:
 
 	void bezier_bicubic(float u, float v, const ofVec3f control_points[4][4], float& x, float& y, float& z);
 	void update_mesh();
+
+	ofVec3f toVec3f(const ofColor& c);
 };

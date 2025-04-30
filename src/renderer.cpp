@@ -49,18 +49,18 @@ void Renderer::update(const GuiManager& guiManager) {
 void Renderer::draw()
 {
     camera.begin();
-    //if (get_is_mouse_button_pressed()) {
-    //    ofSetColor(255, 0, 0);
-    //    ofDrawSphere(screenToScene(get_mouse_current_x(), get_mouse_current_y()), 5);
-    //}
-    //ofTranslate(offset_x, offset_y, offset_z);
-    //ofRotateXDeg(rotation_x);
-    //ofRotateYDeg(rotation_y);
+    if (graph.geometrie.shader_active != nullptr)
+        graph.geometrie.shader_active->begin();
+
     ofSetColor(255, 255, 255);
     for (const auto& i : image)
         i.draw(300, 24, 0);
+
     graph.draw(get_mouse_press(), get_mouse_current(), get_is_mouse_button_pressed());
     graph.dessinVectoriel.draw(get_mouse_press(), get_mouse_current(), get_is_mouse_button_pressed());
+
+    if (graph.geometrie.shader_active != nullptr)
+        graph.geometrie.shader_active->end();
     camera.end();
 }
 

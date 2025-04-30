@@ -119,6 +119,7 @@ void Geometrie::update()
         shader_active->begin();
         shader_active->setUniform3f("color_ambient", 0.1f, 0.1f, 0.1f);
         shader_active->setUniform3f("color_diffuse", 0.6f, 0.6f, 0.6f);
+        shader_active->setUniform1f("brightness", 0.0f);
         shader_active->setUniform3f("light_position", light_point.getGlobalPosition());
         shader_active->end();
         break;
@@ -232,15 +233,32 @@ void Geometrie::draw_cube(ofMaterial material, ofImage img)
         mesh.setTexCoord(i, texCoord);
     }
 
-    material.begin();
-    if (shader_active) shader_active->begin();
+    //material.begin();
 
-    img.getTexture().bind();
+
+    //img.getTexture().bind();
     box.drawFaces();
-    img.getTexture().unbind();
+    //img.getTexture().unbind();
 
-    if (shader_active) shader_active->end();
-    material.end();
+    if (shader_active) {
+        shader_active->begin();
+
+        // propriétés du matériau
+        shader_active->setUniform3f("color_ambient", toVec3f(material.getAmbientColor()));
+        shader_active->setUniform3f("color_diffuse", toVec3f(material.getDiffuseColor()));
+        shader_active->setUniform3f("color_specular", toVec3f(material.getSpecularColor()));
+        shader_active->setUniform1f("brightness", material.getShininess());
+
+        shader_active->setUniform3f("light_position", light_point.getGlobalPosition());
+
+        // texture
+        shader_active->setUniformTexture("tex", img.getTexture(), 0);
+
+        box.drawFaces();
+        shader_active->end();
+    }
+
+    //material.end();
     ofDisableDepthTest();
 }
 
@@ -253,14 +271,23 @@ void Geometrie::draw_sphere(ofMaterial material, ofImage img)
     ofSpherePrimitive sphere;
     sphere.set(50, 10);
     
-    material.begin();
-    if (shader_active) shader_active->begin();
+    if (shader_active) {
+        shader_active->begin();
 
-    if (shader_active) shader_active->end();
-    img.getTexture().bind();
-    sphere.drawFaces();
-    img.getTexture().unbind();
-    material.end();
+        // propriétés du matériau
+        shader_active->setUniform3f("color_ambient", toVec3f(material.getAmbientColor()));
+        shader_active->setUniform3f("color_diffuse", toVec3f(material.getDiffuseColor()));
+        shader_active->setUniform3f("color_specular", toVec3f(material.getSpecularColor()));
+        shader_active->setUniform1f("brightness", material.getShininess());
+
+        shader_active->setUniform3f("light_position", light_point.getGlobalPosition());
+
+        // texture
+        shader_active->setUniformTexture("tex", img.getTexture(), 0);
+
+        sphere.drawFaces();
+        shader_active->end();
+    }
 
     ofDisableDepthTest();
 }
@@ -388,4 +415,8 @@ void Geometrie::update_mesh()
             mesh.addTriangle(idx1, idx4, idx3);
         }
     }
+}
+
+ofVec3f Geometrie::toVec3f(const ofColor& c) {
+    return ofVec3f(c.r / 255.0f, c.g / 255.0f, c.b / 255.0f);
 }
