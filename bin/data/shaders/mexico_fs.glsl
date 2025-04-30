@@ -1,14 +1,14 @@
 #version 330
-uniform sampler2D image;
-in vec2 surface_texcoord;
-out vec4 outputColor;
 
-void main()
-{
-    vec4 color = texture(image, surface_texcoord);
-    // Effet chaud avec dominance rouge/jaune
-    vec3 mex = color.rgb * vec3(1.2, 0.9, 0.6);
-    mex.r = min(mex.r * 1.3, 1.0);
-    mex.b *= 0.7;
-    outputColor = vec4(mex, color.a);
+in vec2 v_texcoord;
+uniform sampler2D tex0;
+
+out vec4 fragColor;
+
+void main() {
+    vec4 texColor = texture(tex0, v_texcoord);
+
+    // Teinte rouge/orange/jaune, saturation poussée
+    vec3 warm = vec3(texColor.r * 1.2, texColor.g * 0.9, texColor.b * 0.7);
+    fragColor = vec4(clamp(warm, 0.0, 1.0), texColor.a);
 }
