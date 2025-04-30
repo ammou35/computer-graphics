@@ -94,7 +94,7 @@ public:
 	bool use_rotation;
 
 	void setup();
-	void update();
+	void update(ElementScene3D* element3D);
 	void draw();
 
 	void draw_cube(ofMaterial material, ofImage img);   // Fonction pour ajouter un cube

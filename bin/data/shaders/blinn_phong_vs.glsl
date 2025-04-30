@@ -1,22 +1,22 @@
-#version 330
+#version 330 core
 
-in vec3 position;
-in vec3 normal;
-in vec2 texcoord;
-
-out vec3 surface_position;
-out vec3 surface_normal;
-out vec2 surface_texcoord;
-
-uniform mat4 modelViewMatrix;
+uniform mat4 modelViewMatrix; // ← we treat this as world-space model matrix
 uniform mat4 projectionMatrix;
 uniform mat3 normalMatrix;
 
+in vec4 position;
+in vec3 normal;
+in vec2 texcoord;
+
+out vec3 frag_pos;
+out vec3 frag_normal;
+out vec2 frag_texcoord;
+
 void main()
 {
-    surface_position = vec3(modelViewMatrix * vec4(position, 1.0));
-    surface_normal = normalize(normalMatrix * normal);
-    surface_texcoord = texcoord;
+    frag_pos = vec3(modelViewMatrix * position); // ← pretend it's world-space
+    frag_normal = normalize(normalMatrix * normal);
+    frag_texcoord = texcoord;
 
-    gl_Position = projectionMatrix * vec4(surface_position, 1.0);
+    gl_Position = projectionMatrix * modelViewMatrix * position;
 }

@@ -112,8 +112,25 @@ void Geometrie::setup()
     skybox.setup("textures/skybox.hdr");
 }
 
-void Geometrie::update()
+void Geometrie::update(ElementScene3D* element3D)
 {
+    std::vector<ofVec3f> light_positions;
+    std::vector<ofVec3f> light_colors;
+
+    // No matrix transformations — everything stays in world space
+    for (int i = 0; i < 30; ++i) {
+        if (element3D[i].type == ElementScene3DType::point_light ||
+            element3D[i].type == ElementScene3DType::spot_light ||
+            element3D[i].type == ElementScene3DType::directional_light) {
+
+            ofVec3f world_pos = element3D[i].lightAttribute.light.getGlobalPosition();
+            ofVec3f color = element3D[i].lightAttribute.diffuseColor / 255.0f;
+
+            light_positions.push_back(world_pos);  // world space
+            light_colors.push_back(color);
+        }
+    }
+
     switch (shader_mode)
     {
     case 1:
@@ -151,15 +168,22 @@ void Geometrie::update()
         shader_active->end();
         break;
 
-    case 4:
+    case 4: // Blinn-Phong
         shader_active = &blinn_phong_shader;
         shader_name = "Blinn-Phong";
+
         shader_active->begin();
         shader_active->setUniform3f("color_ambient", 0.1f, 0.1f, 0.1f);
         shader_active->setUniform3f("color_diffuse", 0.0f, 0.6f, 0.6f);
         shader_active->setUniform3f("color_specular", 1.0f, 1.0f, 0.0f);
         shader_active->setUniform1f("brightness", 10.0f);
-        shader_active->setUniform3f("light_position", light_point.getGlobalPosition());
+        shader_active->setUniform1i("num_lights", light_positions.size());
+
+        for (int i = 0; i < light_positions.size(); ++i) {
+            shader_active->setUniform3f("light_positions[" + ofToString(i) + "]", light_positions[i]);
+            shader_active->setUniform3f("light_colors[" + ofToString(i) + "]", light_colors[i]);
+        }
+
         shader_active->end();
         break;
 
@@ -218,42 +242,21 @@ void Geometrie::draw_bounding_box() const {
 void Geometrie::draw_cube(ofMaterial material, ofImage img)
 {
     ofEnableDepthTest();
-
     ofBoxPrimitive box;
     box.set(200);
-
     box.getMesh().enableNormals();
-
-    //ofMesh& mesh = box.getMesh();
-
-    //float cubeSize = 2.0f; // taille du cube
-    //float textureSize = std::max(img.getWidth(), img.getHeight()); // plus grand côté de l'image
-
-    //// Le facteur doit être "combien de fois" la texture couvre la taille du cube
-    //float repeatFactor = textureSize / cubeSize;
-
-    //for (int i = 0; i < mesh.getNumTexCoords(); ++i) {
-    //    ofVec2f texCoord = mesh.getTexCoord(i);
-    //    texCoord *= repeatFactor;
-    //    mesh.setTexCoord(i, texCoord);
-    //}
     box.mapTexCoords(0, 0, 1, 1);
 
     if (shader_active) {
         shader_active->begin();
 
-        send_common_matrices(shader_active);
+        send_common_matrices(shader_active);  // << REQUIRED to pass modelMatrix
 
-        // propriétés du matériau
         shader_active->setUniform3f("color_ambient", toVec3f(material.getAmbientColor()));
         shader_active->setUniform3f("color_diffuse", toVec3f(material.getDiffuseColor()));
         shader_active->setUniform3f("color_specular", toVec3f(material.getSpecularColor()));
         shader_active->setUniform1f("brightness", material.getShininess());
 
-        shader_active->setUniform3f("light_position", light_point.getGlobalPosition());
-
-        // texture
-        //shader_active->setUniform1i("tex", 0); // assure que le shader lit la texture de l’unité 0
         shader_active->setUniformTexture("tex", img.getTexture(), 0);
 
         box.drawFaces();
@@ -269,6 +272,7 @@ void Geometrie::draw_cube(ofMaterial material, ofImage img)
 
     ofDisableDepthTest();
 }
+
 
 
 // fonction qui dessine une sphère
@@ -433,18 +437,13 @@ void Geometrie::send_common_matrices(ofShader* shader)
 {
     ofMatrix4x4 modelViewMatrix = ofGetCurrentMatrix(OF_MATRIX_MODELVIEW);
     ofMatrix4x4 projectionMatrix = ofGetCurrentMatrix(OF_MATRIX_PROJECTION);
-    ofMatrix4x4 modelViewProjectionMatrix = modelViewMatrix * projectionMatrix;
-
     glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(modelViewMatrix)));
-    shader->setUniformMatrix3f("normalMatrix", normalMatrix);
 
-
+    // We *pretend* modelView is our model matrix
     shader->setUniformMatrix4f("modelViewMatrix", modelViewMatrix);
     shader->setUniformMatrix4f("projectionMatrix", projectionMatrix);
-    //shader->setUniformMatrix3f("normalMatrix", normalMatrix);
-
-    // Light position en espace vue
-    ofVec3f lightPosWorld = light_point.getGlobalPosition();
-    ofVec3f lightPosView = lightPosWorld * modelViewMatrix;
-    shader->setUniform3f("light_position", lightPosView);
+    shader->setUniformMatrix3f("normalMatrix", normalMatrix);
 }
+
+
+

@@ -342,6 +342,9 @@ void GuiManager::draw(ElementScene2D* element2D, ElementScene3D* element3D, cons
                 if (ImGui::RadioButton("Blinn-Phong", shader_mode == 4)) {
                     shader_mode = 4;
                 }
+                if (ImGui::RadioButton("Pbr", shader_mode == 5)) {
+                    shader_mode = 5;
+                }
                 ImGui::EndTabItem();
             }
         }

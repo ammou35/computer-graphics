@@ -42,7 +42,7 @@ void Renderer::update(const GuiManager& guiManager) {
     ofSetBackgroundColor(bg_color);
     center_x = ofGetWidth() / 2.0f;
     center_y = ofGetHeight() / 2.0f;
-    graph.geometrie.update();
+    graph.geometrie.update(graph.element3D);
     ofVec3f worldPress = screenToScene(mouse_press[0], mouse_press[1]);
     ofVec3f worldCurrent = screenToScene(mouse_current[0], mouse_current[1]);
 }
