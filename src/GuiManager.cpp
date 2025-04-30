@@ -17,6 +17,7 @@ void GuiManager::setup() {
     item_selected = 0;
     item_selected3D = 0;
     delimitation = false;
+    sky_box = false;
     projection = false;
     lineWidth = 3.0f;
     tesselation = ImVec2(20.0f, 20.0f);
@@ -345,6 +346,7 @@ void GuiManager::draw(ElementScene2D* element2D, ElementScene3D* element3D, cons
             }
         }
         ImGui::EndTabBar();
+        if (ImGui::Checkbox("Skybox", &sky_box)) {}
         if (ImGui::Checkbox("Delimitation box", &delimitation)) {}
         if (ImGui::BeginTabBar("Tabs2")) {
             if (ImGui::BeginTabItem("Primitives")) {

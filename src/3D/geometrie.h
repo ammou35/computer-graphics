@@ -6,6 +6,8 @@
 
 #include "ofMain.h"
 #include "ofxAssimpModelLoader.h"
+#include "skybox.h"
+
 
 enum class ElementScene3DType { none, cube, sphere, cylinder, cone, donut, plate, spaghetti_getter, bezier_curve, ambiant, directional_light, point_light, spot_light };
 enum class ElementScene3DMaterial { none, volcanicRock, frozenCrystal, mossyStone, neonTech, ancientBronze };
@@ -67,6 +69,8 @@ public:
 
 	float selected_point_depth = 0.0f;
 
+	skybox skybox;
+
 	// B�zier bicubique
 	ofVec3f control_grid[4][4];
 	int resolution_u = 20;
@@ -102,6 +106,7 @@ public:
 	void draw_plate(); // Fonction pour ajouter une assiette
 	void draw_spaghetti_getter(); // Fonction pour ajouter
 	void draw_bezier_curve();
+	void draw_skybox();
 
 	void draw_bounding_box() const;
 	void set_projection_mode(bool mode);
