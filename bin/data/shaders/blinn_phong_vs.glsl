@@ -1,12 +1,12 @@
 #version 330 core
 
-uniform mat4 modelViewMatrix; // ← we treat this as world-space model matrix
+layout(location = 0) in vec3 position;
+layout(location = 1) in vec3 normal;
+layout(location = 2) in vec2 texcoord;
+
+uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
 uniform mat3 normalMatrix;
-
-in vec4 position;
-in vec3 normal;
-in vec2 texcoord;
 
 out vec3 frag_pos;
 out vec3 frag_normal;
@@ -14,9 +14,10 @@ out vec2 frag_texcoord;
 
 void main()
 {
-    frag_pos = vec3(modelViewMatrix * position); // ← pretend it's world-space
+    vec4 view_pos = modelViewMatrix * vec4(position, 1.0);
+    frag_pos = view_pos.xyz;
     frag_normal = normalize(normalMatrix * normal);
     frag_texcoord = texcoord;
 
-    gl_Position = projectionMatrix * modelViewMatrix * position;
+    gl_Position = projectionMatrix * view_pos;
 }

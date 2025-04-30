@@ -63,6 +63,9 @@ public:
 	ofShader lambert_shader;
 	ofShader gouraud_shader;
 
+	std::vector<ofVec3f> light_positions;
+	std::vector<ofVec3f> light_colors;
+
 	int shader_mode;
 	ofShader* shader_active = nullptr;
 	string shader_name;
@@ -116,4 +119,5 @@ public:
 
 	ofVec3f toVec3f(const ofColor& c);
 	void send_common_matrices(ofShader* shader);
+	void send_light_to_shader(ofShader* shader, int i, const ElementScene3D& elem, const ofMatrix4x4& modelViewMatrix);
 };
