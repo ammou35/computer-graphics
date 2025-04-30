@@ -35,6 +35,7 @@ public:
     float delta_r_x;
 
     float speed;
+    bool sky_box;
 
     void setup();
     void update(const GuiManager& guiManager);

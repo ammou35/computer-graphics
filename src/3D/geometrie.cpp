@@ -107,6 +107,8 @@ void Geometrie::setup()
 	texture_Briks.load("textures/brick.jpg");
 	texture_Honeycomb.load("textures/honeycomb.png");
 	texture_Sponge.load("textures/sponge.jpg");
+
+    skybox.setup("textures/skybox.hdr");
 }
 
 void Geometrie::update()

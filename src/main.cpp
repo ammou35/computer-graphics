@@ -3,6 +3,8 @@
 
 int main()
 {
+    ofDisableArbTex();
+
     // paramètres du contexte de rendu OpenGL
     ofGLFWWindowSettings windowSettings;
 

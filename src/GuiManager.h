@@ -24,6 +24,7 @@ public:
     std::array<float, 6> transformation;
     std::array<float, 9> transformation3D;
     bool delimitation;
+    bool sky_box;
     float lineWidth;
     ImVec2 tesselation;
     bool projection;

@@ -36,6 +36,7 @@ void Renderer::update(const GuiManager& guiManager) {
     graph.geometrie.set_projection_mode(guiManager.projection);
     graph.geometrie.shader_mode = guiManager.shader_mode;
     graph.bounding_box = guiManager.delimitation;
+    sky_box = guiManager.sky_box;
     graph.dessinVectoriel.stroke_width_default = guiManager.lineWidth;
     set_bg_color(guiManager.get_vector_bg_color());
     ofSetBackgroundColor(bg_color);
@@ -49,6 +50,10 @@ void Renderer::update(const GuiManager& guiManager) {
 void Renderer::draw()
 {
     camera.begin();
+    //graph.geometrie.skybox.hdrImage.draw(0, 0, 512, 256);
+    if (sky_box) {
+        graph.geometrie.skybox.draw(camera);
+    }
     //if (get_is_mouse_button_pressed()) {
     //    ofSetColor(255, 0, 0);
     //    ofDrawSphere(screenToScene(get_mouse_current_x(), get_mouse_current_y()), 5);
@@ -61,7 +66,7 @@ void Renderer::draw()
         i.draw(300, 24, 0);
     graph.draw(get_mouse_press(), get_mouse_current(), get_is_mouse_button_pressed());
     graph.dessinVectoriel.draw(get_mouse_press(), get_mouse_current(), get_is_mouse_button_pressed());
-    camera.end();
+    camera.end(); 
 }
 
 void Renderer::imageExport(const string name, const string extension) const
