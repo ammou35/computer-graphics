@@ -1,10 +1,10 @@
 #version 330
+
 uniform sampler2D image;
 in vec2 surface_texcoord;
 out vec4 outputColor;
 
 void main()
 {
-    vec4 color = texture(image, surface_texcoord);
-    outputColor = vec4(1.0 - color.rgb, color.a);
+    outputColor = texture(image, surface_texcoord);
 }

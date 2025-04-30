@@ -5,12 +5,12 @@
 
 void Geometrie::setup()
 {
-    // Paramètres généraux
+    // Paramï¿½tres gï¿½nï¿½raux
     //scale_teapot = 1.5f;
     //rotation_speed = 0.3f;
     //use_rotation = true;
-    //bounding_box = true;       // Affichage de la boîte de délimitation
-    //animation_speed = 0.02f;   // Vitesse d’animation
+    //bounding_box = true;       // Affichage de la boï¿½te de dï¿½limitation
+    //animation_speed = 0.02f;   // Vitesse dï¿½animation
     //instance_count = 5;        // Nombre d'instances pour la duplication
 
     // Activer les effets graphiques
@@ -25,7 +25,7 @@ void Geometrie::setup()
 
     radius = 10;
 
-    // Génération des points de contrôle en grille 4x4
+    // Gï¿½nï¿½ration des points de contrï¿½le en grille 4x4
     float centerX = 0;
     float centerY = 0;
 
@@ -48,8 +48,15 @@ void Geometrie::setup()
     //shader_lambert.load("lambert_330_vs.glsl", "lambert_330_fs.glsl");
     //shader_normal.load("draw_normal_330_vs.glsl", "draw_normal_330_fs.glsl");
 
-    // Sélectionner le shader courant
+    // Sï¿½lectionner le shader courant
     //shader = shader_lambert;
+
+    filtre_None.load("shaders/passthrough_vs.glsl", "shaders/passthrough_fs.glsl");
+    filtre_Blur.load("shaders/passthrough_vs.glsl", "shaders/blur_fs.glsl");
+    filtre_Grayscale.load("shaders/passthrough_vs.glsl", "shaders/grayscale_fs.glsl");
+    filtre_Vignette.load("shaders/passthrough_vs.glsl", "shaders/vignette_fs.glsl");
+    filtre_Mexico.load("shaders/passthrough_vs.glsl", "shaders/mexico_fs.glsl");
+    filtre_Invert.load("shaders/passthrough_vs.glsl", "shaders/invert_fs.glsl");
 
     lambert_shader.load("shaders/lambert_vs.glsl", "shaders/lambert_fs.glsl");
     gouraud_shader.load("shaders/gouraud_vs.glsl", "shaders/gouraud_fs.glsl");
@@ -108,6 +115,28 @@ void Geometrie::setup()
 	texture_Briks.load("textures/brick.jpg");
 	texture_Honeycomb.load("textures/honeycomb.png");
 	texture_Sponge.load("textures/sponge.jpg");
+
+    int width = 256;
+    int height = 256;
+    int tileSize = 32;
+
+    texture_Checkerboard.allocate(width, height, OF_IMAGE_COLOR);
+
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            int tileX = x / tileSize;
+            int tileY = y / tileSize;
+
+            // Calcul d'une couleur en arc-en-ciel en fonction de la position
+            float hue = fmod((tileX + tileY) * 30.0f, 255.0f); // 30ï¿½ par case diagonale
+            ofColor color;
+            color.setHsb(hue, 255, 255); // teinte vive
+
+            texture_Checkerboard.setColor(x, y, color);
+        }
+    }
+
+    texture_Checkerboard.update(); // Envoie la texture au GPU
 
     skybox.setup("textures/skybox.hdr");
 }
@@ -192,28 +221,6 @@ void Geometrie::update(ElementScene3D* element3D)
 
 void Geometrie::draw()
 {
-//    // Passer les attributs uniformes au shader
-//    shader.setUniform3f("color_ambient", color_ambient.r / 255.0f, color_ambient.g / 255.0f, color_ambient.b / 255.0f);
-//    shader.setUniform3f("color_diffuse", color_diffuse.r / 255.0f, color_diffuse.g / 255.0f, color_diffuse.b / 255.0f);
-//    shader.setUniform3f("light_position", light.getGlobalPosition());
-//
-//
-//    // Instanciation : Duplication du teapot avec variations
-//    for (int i = 0; i < instance_count; i++)
-//    {
-//        float offset = i * 50.0f;
-//        float scale_variation = 1.0f + sin(ofGetElapsedTimef() + i) * 0.5f;
-//        teapot.setScale(scale_teapot * scale_variation, scale_teapot * scale_variation, scale_teapot * scale_variation);
-//        teapot.setPosition(center_x + offset, center_y + 90, 0);
-//        teapot.draw(OF_MESH_FILL);
-//    }
-//
-//    // Fin du rendu
-//    shader.end();
-//    light.disable();
-//    ofDisableLighting();
-//    ofDisableDepthTest();
-
     ofPushMatrix();
 
     if (!projection_mode) {
@@ -235,17 +242,32 @@ void Geometrie::draw_bounding_box() const {
     ofDrawBox(0, 0, 0, 100);
 }
 
-// fonction qui dessine un cube
-void Geometrie::draw_cube(ofMaterial material, ofImage img)
-{
+void Geometrie::draw_cube(ofMaterial material, ofImage img, ElementScene3DFiltre filtre) {
     ofEnableDepthTest();
     ofBoxPrimitive box;
     box.set(200);
     box.getMesh().enableNormals();
-    box.mapTexCoords(0, 0, 1, 1);
+    box.mapTexCoordsFromTexture(img.getTexture()); // ici correct
 
-    if (shader_active) {
-        shader_active->begin();
+    bool useSpecialFilter = (filtre != ElementScene3DFiltre::none);
+
+    if (useSpecialFilter) {
+        ofShader* fshader = get_filter_shader(filtre);
+
+        if (fshader && fshader->isLoaded()) {
+            fshader->begin();
+
+            fshader->setUniformMatrix4f("modelViewProjectionMatrix", ofGetCurrentMatrix(OF_MATRIX_MODELVIEW) * ofGetCurrentMatrix(OF_MATRIX_PROJECTION));
+            fshader->setUniformTexture("tex0", img.getTexture(), 0);
+
+            box.drawFaces();
+
+            fshader->end();
+        }
+    }
+    else {
+        if (shader_active && shader_active->isLoaded()) {
+            shader_active->begin();
 
         send_common_matrices(shader_active);
 
@@ -256,23 +278,26 @@ void Geometrie::draw_cube(ofMaterial material, ofImage img)
 
         shader_active->setUniformTexture("tex", img.getTexture(), 0);
 
-        // ENVOIE DES LUMIÈRES À NOUVEAU
+        // ENVOIE DES LUMIï¿½RES ï¿½ NOUVEAU
         for (int i = 0; i < light_positions.size(); ++i) {
             shader_active->setUniform3f("light_positions[" + ofToString(i) + "]", light_positions[i]);
             shader_active->setUniform3f("light_colors[" + ofToString(i) + "]", light_colors[i]);
         }
         shader_active->setUniform1i("num_lights", light_positions.size());
 
-        box.drawFaces();
-        shader_active->end();
-    }
+            img.getTexture().bind();
+            box.drawFaces();
+            img.getTexture().unbind();
 
-    else {
-        material.begin();
-        img.getTexture().bind();
-        box.drawFaces();
-        img.getTexture().unbind();
-        material.end();
+            shader_active->end();
+        }
+        else {
+            material.begin();
+            img.getTexture().bind();
+            box.drawFaces();
+            img.getTexture().unbind();
+            material.end();
+        }
     }
 
     ofDisableDepthTest();
@@ -280,7 +305,9 @@ void Geometrie::draw_cube(ofMaterial material, ofImage img)
 
 
 
-// fonction qui dessine une sphère
+
+
+// fonction qui dessine une sphï¿½re
 void Geometrie::draw_sphere(ofMaterial material, ofImage img)
 {
     ofEnableDepthTest();
@@ -291,7 +318,7 @@ void Geometrie::draw_sphere(ofMaterial material, ofImage img)
     if (shader_active) {
         shader_active->begin();
 
-        // propriétés du matériau
+        // propriï¿½tï¿½s du matï¿½riau
         shader_active->setUniform3f("color_ambient", toVec3f(material.getAmbientColor()));
         shader_active->setUniform3f("color_diffuse", toVec3f(material.getDiffuseColor()));
         shader_active->setUniform3f("color_specular", toVec3f(material.getSpecularColor()));
@@ -315,7 +342,7 @@ void Geometrie::draw_cylinder() const
     ofDrawCylinder(0, 0, 0, 50, 100);
 }
 
-// fonction qui dessine un cône
+// fonction qui dessine un cï¿½ne
 void Geometrie::draw_cone() const
 {
     ofDrawCone(0, 0, 0, 50, 100);
@@ -324,7 +351,7 @@ void Geometrie::draw_cone() const
 // fonction qui dessine un donut
 void Geometrie::draw_donut()
 {
-    // configurer le matériau du teapot
+    // configurer le matï¿½riau du teapot
     ofEnableDepthTest();
 
     donut.draw(OF_MESH_FILL);
@@ -332,7 +359,7 @@ void Geometrie::draw_donut()
     //donut.drawFaces();
     //donutImage.getTexture().unbind();
 
-    // désactiver le matériau
+    // dï¿½sactiver le matï¿½riau
     //material_donut.end();
     //donut.drawWireframe();
     ofDisableDepthTest();
@@ -346,7 +373,7 @@ void Geometrie::draw_plate()
     ofDisableDepthTest();
 }
 
-// fonction qui dessine un cône
+// fonction qui dessine un cï¿½ne
 void Geometrie::draw_spaghetti_getter()
 {
     ofEnableDepthTest();
@@ -358,7 +385,7 @@ void Geometrie::draw_bezier_curve() {
     ofSetColor(39, 107, 5);
     mesh.drawWireframe();
     update_mesh();
-    // Dessiner les points de contrôle
+    // Dessiner les points de contrï¿½le
     ofSetColor(255, 0, 0);
     for (int i = 0; i < 4; ++i)
         for (int j = 0; j < 4; ++j)
@@ -405,7 +432,7 @@ void Geometrie::update_mesh()
     mesh.clear();
     mesh.setMode(OF_PRIMITIVE_TRIANGLES);
 
-    // Génération des sommets
+    // Gï¿½nï¿½ration des sommets
     for (int i = 0; i <= resolution_u; ++i)
     {
         float u = i / (float)resolution_u;
@@ -464,4 +491,17 @@ void Geometrie::send_light_to_shader(ofShader* shader, int i, const ElementScene
     shader->setUniform3f("lights[" + ofToString(i) + "].position", pos_view);
     shader->setUniform3f("lights[" + ofToString(i) + "].direction", dir_view);
     shader->setUniform1f("lights[" + ofToString(i) + "].cutoff", cutoff);
+}
+
+ofShader* Geometrie::get_filter_shader(ElementScene3DFiltre filtre) {
+    switch (filtre) {
+    case ElementScene3DFiltre::blur: return &filtre_Blur;
+    case ElementScene3DFiltre::grayscale: return &filtre_Grayscale;
+    case ElementScene3DFiltre::vignette: return &filtre_Vignette;
+    case ElementScene3DFiltre::mexico: return &filtre_Mexico;
+    case ElementScene3DFiltre::invert: return &filtre_Invert;
+    case ElementScene3DFiltre::none:
+    default:
+        return &filtre_None;
+    }
 }
