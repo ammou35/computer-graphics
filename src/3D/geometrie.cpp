@@ -114,18 +114,20 @@ void Geometrie::setup()
 
 void Geometrie::update(ElementScene3D* element3D)
 {
-    ofMatrix4x4 modelViewMatrix = ofGetCurrentMatrix(OF_MATRIX_MODELVIEW);
-
-    std::vector<ElementScene3D> lights_data;
+    ofMatrix4x4 modelViewMatrix = ofGetCurrentMatrix(OF_MATRIX_MODELVIEW); // AJOUTÉ
 
     for (int i = 0; i < 30; ++i) {
-        ElementScene3D& elem = element3D[i];
+        if (element3D[i].type == ElementScene3DType::point_light ||
+            element3D[i].type == ElementScene3DType::spot_light ||
+            element3D[i].type == ElementScene3DType::directional_light) {
 
-        if (elem.type == ElementScene3DType::ambiant ||
-            elem.type == ElementScene3DType::directional_light ||
-            elem.type == ElementScene3DType::point_light ||
-            elem.type == ElementScene3DType::spot_light) {
-            lights_data.push_back(elem);
+            ofVec3f world_pos = element3D[i].lightAttribute.light.getGlobalPosition();
+            ofVec3f view_pos = world_pos * modelViewMatrix; // TRANSFORMATION
+
+            ofVec3f color = element3D[i].lightAttribute.diffuseColor / 255.0f;
+
+            light_positions.push_back(view_pos);   // ESPACE VUE
+            light_colors.push_back(color);
         }
     }
 
@@ -165,22 +167,23 @@ void Geometrie::update(ElementScene3D* element3D)
         shader_active->setUniform3f("light_position", light_point.getGlobalPosition());
         shader_active->end();
         break;
+
     case 4: // Blinn-Phong
         shader_active = &blinn_phong_shader;
         shader_name = "Blinn-Phong";
 
         shader_active->begin();
-
         shader_active->setUniform3f("color_ambient", 0.1f, 0.1f, 0.1f);
         shader_active->setUniform3f("color_diffuse", 0.0f, 0.6f, 0.6f);
         shader_active->setUniform3f("color_specular", 1.0f, 1.0f, 0.0f);
         shader_active->setUniform1f("brightness", 10.0f);
+        shader_active->setUniform1i("num_lights", light_positions.size());
 
-        for (int i = 0; i < lights_data.size(); ++i) {
-            send_light_to_shader(shader_active, i, lights_data[i], modelViewMatrix);
+        for (int i = 0; i < light_positions.size(); ++i) {
+            shader_active->setUniform3f("light_positions[" + ofToString(i) + "]", light_positions[i]);
+            shader_active->setUniform3f("light_colors[" + ofToString(i) + "]", light_colors[i]);
         }
 
-        shader_active->setUniform1i("num_lights", lights_data.size());
         shader_active->end();
         break;
 
@@ -449,19 +452,5 @@ void Geometrie::send_common_matrices(ofShader* shader)
     shader->setUniformMatrix3f("normalMatrix", normalMatrix);
 }
 
-void Geometrie::send_light_to_shader(ofShader* shader, int i, const ElementScene3D& elem, const ofMatrix4x4& modelViewMatrix)
-{
-    const LightAttribute& l = elem.lightAttribute;
 
-    int type = static_cast<int>(elem.type);
-    ofVec3f color = l.diffuseColor / 255.0f;
-    ofVec3f pos_view = l.light.getGlobalPosition() * modelViewMatrix;
-    ofVec3f dir_view = l.orientation * modelViewMatrix.getRotate();
-    float cutoff = cos(ofDegToRad(l.lightCutOff));
 
-    shader->setUniform1i("lights[" + ofToString(i) + "].type", type);
-    shader->setUniform3f("lights[" + ofToString(i) + "].color", color);
-    shader->setUniform3f("lights[" + ofToString(i) + "].position", pos_view);
-    shader->setUniform3f("lights[" + ofToString(i) + "].direction", dir_view);
-    shader->setUniform1f("lights[" + ofToString(i) + "].cutoff", cutoff);
-}
