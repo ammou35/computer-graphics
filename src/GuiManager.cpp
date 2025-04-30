@@ -657,6 +657,9 @@ void GuiManager::draw(ElementScene2D* element2D, ElementScene3D* element3D, cons
                             if (ImGui::RadioButton("Spong", element3D_texture == 5)) {
                                 element3D_texture = 5;
                             }
+                            if (ImGui::RadioButton("Checker", element3D_texture == 6)) {
+                                element3D_texture = 6;
+                            }
                             ImGui::EndTabItem();
                         }
                         if (ImGui::BeginTabItem("Filtres")) {

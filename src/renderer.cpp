@@ -32,7 +32,7 @@ void Renderer::setup()
 }
 
 void Renderer::update(const GuiManager& guiManager) {
-    graph.update(guiManager.get_vector_stroke_color(), guiManager.get_vector_fill_color(), guiManager.get_type_vector_primitive(), guiManager.transformation, guiManager.transformation3D, guiManager.element3D_material, guiManager.element3D_texture);
+    graph.update(guiManager.get_vector_stroke_color(), guiManager.get_vector_fill_color(), guiManager.get_type_vector_primitive(), guiManager.transformation, guiManager.transformation3D, guiManager.element3D_material, guiManager.element3D_texture, guiManager.element3D_filtre);
     graph.geometrie.set_projection_mode(guiManager.projection);
     graph.geometrie.shader_mode = guiManager.shader_mode;
     graph.bounding_box = guiManager.delimitation;

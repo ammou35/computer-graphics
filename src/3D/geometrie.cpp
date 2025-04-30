@@ -53,7 +53,7 @@ void Geometrie::setup()
 
     filtre_None.load("shaders/passthrough_vs.glsl", "shaders/passthrough_fs.glsl");
     filtre_Blur.load("shaders/passthrough_vs.glsl", "shaders/blur_fs.glsl");
-    filtre_Grayscale.load("shaders/passthrough_vs.glsl", "shaders/blur_fs.glsl");
+    filtre_Grayscale.load("shaders/passthrough_vs.glsl", "shaders/grayscale_fs.glsl");
     filtre_Vignette.load("shaders/passthrough_vs.glsl", "shaders/vignette_fs.glsl");
     filtre_Mexico.load("shaders/passthrough_vs.glsl", "shaders/mexico_fs.glsl");
     filtre_Invert.load("shaders/passthrough_vs.glsl", "shaders/invert_fs.glsl");
@@ -115,6 +115,28 @@ void Geometrie::setup()
 	texture_Briks.load("textures/brick.jpg");
 	texture_Honeycomb.load("textures/honeycomb.png");
 	texture_Sponge.load("textures/sponge.jpg");
+
+    int width = 256;
+    int height = 256;
+    int tileSize = 32;
+
+    texture_Checkerboard.allocate(width, height, OF_IMAGE_COLOR);
+
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            int tileX = x / tileSize;
+            int tileY = y / tileSize;
+
+            // Calcul d'une couleur en arc-en-ciel en fonction de la position
+            float hue = fmod((tileX + tileY) * 30.0f, 255.0f); // 30° par case diagonale
+            ofColor color;
+            color.setHsb(hue, 255, 255); // teinte vive
+
+            texture_Checkerboard.setColor(x, y, color);
+        }
+    }
+
+    texture_Checkerboard.update(); // Envoie la texture au GPU
 
     skybox.setup("textures/skybox.hdr");
 }
@@ -178,28 +200,6 @@ void Geometrie::update()
 
 void Geometrie::draw()
 {
-//    // Passer les attributs uniformes au shader
-//    shader.setUniform3f("color_ambient", color_ambient.r / 255.0f, color_ambient.g / 255.0f, color_ambient.b / 255.0f);
-//    shader.setUniform3f("color_diffuse", color_diffuse.r / 255.0f, color_diffuse.g / 255.0f, color_diffuse.b / 255.0f);
-//    shader.setUniform3f("light_position", light.getGlobalPosition());
-//
-//
-//    // Instanciation : Duplication du teapot avec variations
-//    for (int i = 0; i < instance_count; i++)
-//    {
-//        float offset = i * 50.0f;
-//        float scale_variation = 1.0f + sin(ofGetElapsedTimef() + i) * 0.5f;
-//        teapot.setScale(scale_teapot * scale_variation, scale_teapot * scale_variation, scale_teapot * scale_variation);
-//        teapot.setPosition(center_x + offset, center_y + 90, 0);
-//        teapot.draw(OF_MESH_FILL);
-//    }
-//
-//    // Fin du rendu
-//    shader.end();
-//    light.disable();
-//    ofDisableLighting();
-//    ofDisableDepthTest();
-
     ofPushMatrix();
 
     if (!projection_mode) {
@@ -221,61 +221,62 @@ void Geometrie::draw_bounding_box() const {
     ofDrawBox(0, 0, 0, 100);
 }
 
-// fonction qui dessine un cube
-void Geometrie::draw_cube(ofMaterial material, ofImage img)
-{
+void Geometrie::draw_cube(ofMaterial material, ofImage img, ElementScene3DFiltre filtre) {
     ofEnableDepthTest();
 
     ofBoxPrimitive box;
     box.set(200);
-
     box.getMesh().enableNormals();
+    box.mapTexCoordsFromTexture(img.getTexture()); // ici correct
 
-    //ofMesh& mesh = box.getMesh();
+    bool useSpecialFilter = (filtre != ElementScene3DFiltre::none);
 
-    //float cubeSize = 2.0f; // taille du cube
-    //float textureSize = std::max(img.getWidth(), img.getHeight()); // plus grand côté de l'image
+    if (useSpecialFilter) {
+        ofShader* fshader = get_filter_shader(filtre);
 
-    //// Le facteur doit être "combien de fois" la texture couvre la taille du cube
-    //float repeatFactor = textureSize / cubeSize;
+        if (fshader && fshader->isLoaded()) {
+            fshader->begin();
 
-    //for (int i = 0; i < mesh.getNumTexCoords(); ++i) {
-    //    ofVec2f texCoord = mesh.getTexCoord(i);
-    //    texCoord *= repeatFactor;
-    //    mesh.setTexCoord(i, texCoord);
-    //}
-    box.mapTexCoords(0, 0, 1, 1);
+            fshader->setUniformMatrix4f("modelViewProjectionMatrix", ofGetCurrentMatrix(OF_MATRIX_MODELVIEW) * ofGetCurrentMatrix(OF_MATRIX_PROJECTION));
+            fshader->setUniformTexture("tex0", img.getTexture(), 0);
 
-    if (shader_active) {
-        shader_active->begin();
+            box.drawFaces();
 
-        send_common_matrices(shader_active);
-
-        // propriétés du matériau
-        shader_active->setUniform3f("color_ambient", toVec3f(material.getAmbientColor()));
-        shader_active->setUniform3f("color_diffuse", toVec3f(material.getDiffuseColor()));
-        shader_active->setUniform3f("color_specular", toVec3f(material.getSpecularColor()));
-        shader_active->setUniform1f("brightness", material.getShininess());
-
-        shader_active->setUniform3f("light_position", light_point.getGlobalPosition());
-
-        // texture
-        //shader_active->setUniform1i("tex", 0); // assure que le shader lit la texture de l’unité 0
-        shader_active->setUniformTexture("tex", img.getTexture(), 0);
-
-        box.drawFaces();
-        shader_active->end();
+            fshader->end();
+        }
     }
     else {
-        material.begin();
-        img.getTexture().bind();
-        box.drawFaces();
-        img.getTexture().unbind();
-        material.end();
+        if (shader_active && shader_active->isLoaded()) {
+            shader_active->begin();
+
+            send_common_matrices(shader_active);
+            shader_active->setUniform3f("color_ambient", toVec3f(material.getAmbientColor()));
+            shader_active->setUniform3f("color_diffuse", toVec3f(material.getDiffuseColor()));
+            shader_active->setUniform3f("color_specular", toVec3f(material.getSpecularColor()));
+            shader_active->setUniform1f("brightness", material.getShininess());
+            shader_active->setUniform3f("light_position", light_point.getGlobalPosition());
+            shader_active->setUniformTexture("tex", img.getTexture(), 0);
+
+            img.getTexture().bind();
+            box.drawFaces();
+            img.getTexture().unbind();
+
+            shader_active->end();
+        }
+        else {
+            material.begin();
+            img.getTexture().bind();
+            box.drawFaces();
+            img.getTexture().unbind();
+            material.end();
+        }
     }
 
     ofDisableDepthTest();
 }
+
+
+
 
 
 // fonction qui dessine une sphère
@@ -451,4 +452,17 @@ void Geometrie::send_common_matrices(ofShader* shader)
     ofVec3f lightPosWorld = light_point.getGlobalPosition();
     ofVec3f lightPosView = lightPosWorld * modelViewMatrix;
     shader->setUniform3f("light_position", lightPosView);
+}
+
+ofShader* Geometrie::get_filter_shader(ElementScene3DFiltre filtre) {
+    switch (filtre) {
+    case ElementScene3DFiltre::blur: return &filtre_Blur;
+    case ElementScene3DFiltre::grayscale: return &filtre_Grayscale;
+    case ElementScene3DFiltre::vignette: return &filtre_Vignette;
+    case ElementScene3DFiltre::mexico: return &filtre_Mexico;
+    case ElementScene3DFiltre::invert: return &filtre_Invert;
+    case ElementScene3DFiltre::none:
+    default:
+        return &filtre_None;
+    }
 }

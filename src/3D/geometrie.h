@@ -11,7 +11,7 @@
 
 enum class ElementScene3DType { none, cube, sphere, cylinder, cone, donut, plate, spaghetti_getter, bezier_curve, ambiant, directional_light, point_light, spot_light };
 enum class ElementScene3DMaterial { none, volcanicRock, frozenCrystal, mossyStone, neonTech, ancientBronze };
-enum class ElementScene3DTexture { none, wood, sand, briks, honeycomb, sponge };
+enum class ElementScene3DTexture { none, wood, sand, briks, honeycomb, sponge, checkboard };
 enum class ElementScene3DFiltre { none, blur, grayscale, vignette, mexico, invert };
 
 struct LightAttribute {
@@ -52,6 +52,7 @@ public:
 	ofImage texture_Briks;
 	ofImage texture_Honeycomb;
 	ofImage texture_Sponge;
+	ofImage texture_Checkerboard;
 
 	ofMaterial material_None;
 	ofMaterial material_VolcanicRock;
@@ -71,6 +72,8 @@ public:
 	ofShader blinn_phong_shader;
 	ofShader lambert_shader;
 	ofShader gouraud_shader;
+
+	ofFbo objectFbo;
 
 	int shader_mode;
 	ofShader* shader_active = nullptr;
@@ -106,7 +109,7 @@ public:
 	void update();
 	void draw();
 
-	void draw_cube(ofMaterial material, ofImage img);   // Fonction pour ajouter un cube
+	void draw_cube(ofMaterial material, ofImage img, ElementScene3DFiltre filtre);   // Fonction pour ajouter un cube
 	void draw_sphere(ofMaterial material, ofImage img); // Fonction pour ajouter une sph�re
 	void draw_cylinder() const; // Fonction pour ajouter un cylindre
 	void draw_cone() const; // Fonction pour ajouter un c�ne
@@ -117,6 +120,7 @@ public:
 	void draw_bezier_curve();
 	void draw_skybox();
 
+	ofShader* get_filter_shader(ElementScene3DFiltre filtre);
 	void draw_bounding_box() const;
 	void set_projection_mode(bool mode);
 

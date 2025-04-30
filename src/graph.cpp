@@ -31,7 +31,7 @@ void Graph::setup() {
 	}
 }
 
-void Graph::update(const ofColor& stroke_color, const ofColor& fill_color, const int& type_vector_primitive, const std::array<float, 6>& transformation, const std::array<float, 9>&transformation3D, const int& element3D_material, const int& element3D_texture) {
+void Graph::update(const ofColor& stroke_color, const ofColor& fill_color, const int& type_vector_primitive, const std::array<float, 6>& transformation, const std::array<float, 9>&transformation3D, const int& element3D_material, const int& element3D_texture, const int& element3D_filre) {
 	set_draw_shape(type_vector_primitive);
 	dessinVectoriel.update(stroke_color, fill_color, type_vector_primitive);
 	for (int index = 0; index < buffer_count; index++) {
@@ -91,13 +91,14 @@ void Graph::update(const ofColor& stroke_color, const ofColor& fill_color, const
 			case 5:
 				elementScene3DTexture = ElementScene3DTexture::sponge;
 				break;
+			case 6:
+				elementScene3DTexture = ElementScene3DTexture::checkboard;
+				break;
 			}
 			element3D[index].texture = elementScene3DTexture;
 
-			element3D[index].transformation = transformation3D;
-
 			ElementScene3DFiltre elementScene3DFiltre;
-			switch (element3D_texture) {
+			switch (element3D_filre) {
 			case -1:
 				elementScene3DFiltre = ElementScene3DFiltre::none;
 				break;
@@ -205,17 +206,45 @@ void Graph::draw(const std::array<int, 2>& mouse_press, const std::array<int, 2>
 		case ElementScene3DTexture::sponge:
 			texture = geometrie.texture_Sponge;
 			break;
+		case ElementScene3DTexture::checkboard:
+			texture = geometrie.texture_Checkerboard;
+			break;
 		default:
 			texture = geometrie.texture_None;
 			break;
 		}
+
+		//ofShader filtre;
+		//switch (element3D[i].filtre) {
+		//case ElementScene3DFiltre::none:
+		//	filtre = geometrie.filtre_None;
+		//	break;
+		//case ElementScene3DFiltre::blur:
+		//	filtre = geometrie.filtre_Blur;
+		//	break;
+		//case ElementScene3DFiltre::grayscale:
+		//	filtre = geometrie.filtre_Grayscale;
+		//	break;
+		//case ElementScene3DFiltre::vignette:
+		//	filtre = geometrie.filtre_Vignette;
+		//	break;
+		//case ElementScene3DFiltre::mexico:
+		//	filtre = geometrie.filtre_Mexico;
+		//	break;
+		//case ElementScene3DFiltre::invert:
+		//	filtre = geometrie.filtre_Invert;
+		//	break;
+		//default:
+		//	filtre = geometrie.filtre_None;
+		//	break;
+		//}
 		ofEnableLighting();
 		light_on();
 		switch (element3D[i].type) {
 			case ElementScene3DType::none:
 				break;
 			case ElementScene3DType::cube:
-				geometrie.draw_cube(material, texture);
+				geometrie.draw_cube(material, texture, element3D[i].filtre);
 				break;
 			case ElementScene3DType::sphere:
 				geometrie.draw_sphere(material, texture);
