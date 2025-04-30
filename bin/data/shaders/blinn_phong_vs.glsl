@@ -12,6 +12,7 @@ out vec3 frag_pos;
 out vec3 frag_normal;
 out vec2 frag_texcoord;
 
+
 void main()
 {
     vec4 view_pos = modelViewMatrix * vec4(position, 1.0);

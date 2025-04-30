@@ -77,6 +77,8 @@ public:
 
 	std::vector<ofVec3f> light_positions;
 	std::vector<ofVec3f> light_colors;
+	std::vector<ElementScene3D> lights_data;
+	ofVec3f view_pos;
 
 	int shader_mode;
 	ofShader* shader_active = nullptr;
