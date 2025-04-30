@@ -51,6 +51,13 @@ void Geometrie::setup()
     // Sélectionner le shader courant
     //shader = shader_lambert;
 
+    filtre_None.load("shaders/passthrough_vs.glsl", "shaders/passthrough_fs.glsl");
+    filtre_Blur.load("shaders/passthrough_vs.glsl", "shaders/blur_fs.glsl");
+    filtre_Grayscale.load("shaders/passthrough_vs.glsl", "shaders/blur_fs.glsl");
+    filtre_Vignette.load("shaders/passthrough_vs.glsl", "shaders/vignette_fs.glsl");
+    filtre_Mexico.load("shaders/passthrough_vs.glsl", "shaders/mexico_fs.glsl");
+    filtre_Invert.load("shaders/passthrough_vs.glsl", "shaders/invert_fs.glsl");
+
     lambert_shader.load("shaders/lambert_vs.glsl", "shaders/lambert_fs.glsl");
     gouraud_shader.load("shaders/gouraud_vs.glsl", "shaders/gouraud_fs.glsl");
     phong_shader.load("shaders/phong_vs.glsl", "shaders/phong_fs.glsl");
@@ -437,11 +444,8 @@ void Geometrie::send_common_matrices(ofShader* shader)
 
     glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(modelViewMatrix)));
     shader->setUniformMatrix3f("normalMatrix", normalMatrix);
-
-
     shader->setUniformMatrix4f("modelViewMatrix", modelViewMatrix);
     shader->setUniformMatrix4f("projectionMatrix", projectionMatrix);
-    //shader->setUniformMatrix3f("normalMatrix", normalMatrix);
 
     // Light position en espace vue
     ofVec3f lightPosWorld = light_point.getGlobalPosition();

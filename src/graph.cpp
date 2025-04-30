@@ -96,6 +96,31 @@ void Graph::update(const ofColor& stroke_color, const ofColor& fill_color, const
 
 			element3D[index].transformation = transformation3D;
 
+			ElementScene3DFiltre elementScene3DFiltre;
+			switch (element3D_texture) {
+			case -1:
+				elementScene3DFiltre = ElementScene3DFiltre::none;
+				break;
+			case 1:
+				elementScene3DFiltre = ElementScene3DFiltre::blur;
+				break;
+			case 2:
+				elementScene3DFiltre = ElementScene3DFiltre::grayscale;
+				break;
+			case 3:
+				elementScene3DFiltre = ElementScene3DFiltre::vignette;
+				break;
+			case 4:
+				elementScene3DFiltre = ElementScene3DFiltre::mexico;
+				break;
+			case 5:
+				elementScene3DFiltre = ElementScene3DFiltre::invert;
+				break;
+			}
+			element3D[index].filtre = elementScene3DFiltre;
+
+			element3D[index].transformation = transformation3D;
+
 			/*if (element3D[index].type == ElementScene3DType::point_light || element3D[index].type == ElementScene3DType::directional_light || element3D[index].type == ElementScene3DType::spot_light) {
 				element3D[index].lightAttribute.light.setPosition(element3D[index].transformation[0], element3D[index].transformation[1], element3D[index].transformation[2]);
 			}*/

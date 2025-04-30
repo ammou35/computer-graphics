@@ -12,6 +12,7 @@
 enum class ElementScene3DType { none, cube, sphere, cylinder, cone, donut, plate, spaghetti_getter, bezier_curve, ambiant, directional_light, point_light, spot_light };
 enum class ElementScene3DMaterial { none, volcanicRock, frozenCrystal, mossyStone, neonTech, ancientBronze };
 enum class ElementScene3DTexture { none, wood, sand, briks, honeycomb, sponge };
+enum class ElementScene3DFiltre { none, blur, grayscale, vignette, mexico, invert };
 
 struct LightAttribute {
 	ofLight light;
@@ -31,6 +32,7 @@ struct ElementScene3D {
 	bool bounding_box;
 	ElementScene3DMaterial material;
 	ElementScene3DTexture texture;
+	ElementScene3DFiltre filtre;
 	LightAttribute lightAttribute;
 };
 
@@ -51,12 +53,19 @@ public:
 	ofImage texture_Honeycomb;
 	ofImage texture_Sponge;
 
+	ofMaterial material_None;
 	ofMaterial material_VolcanicRock;
 	ofMaterial material_FrozenCrystal;
 	ofMaterial material_MossyStone;
 	ofMaterial material_NeonTech;
 	ofMaterial material_AncientBronze;
-	ofMaterial material_None;
+
+	ofShader filtre_None;
+	ofShader filtre_Blur;
+	ofShader filtre_Grayscale;
+	ofShader filtre_Vignette;
+	ofShader filtre_Mexico;
+	ofShader filtre_Invert;
 
 	ofShader phong_shader;
 	ofShader blinn_phong_shader;
