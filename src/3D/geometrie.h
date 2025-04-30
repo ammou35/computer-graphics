@@ -115,4 +115,5 @@ public:
 	void update_mesh();
 
 	ofVec3f toVec3f(const ofColor& c);
+	void send_common_matrices(ofShader* shader);
 };

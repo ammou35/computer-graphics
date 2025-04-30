@@ -55,6 +55,7 @@ void Geometrie::setup()
     gouraud_shader.load("shaders/gouraud_vs.glsl", "shaders/gouraud_fs.glsl");
     phong_shader.load("shaders/phong_vs.glsl", "shaders/phong_fs.glsl");
     blinn_phong_shader.load("shaders/blinn_phong_vs.glsl", "shaders/blinn_phong_fs.glsl");
+    ofLogNotice() << "Blinn-Phong loaded: " << blinn_phong_shader.isLoaded();
 
     // Default shader active
     shader_active = &blinn_phong_shader;
@@ -221,29 +222,27 @@ void Geometrie::draw_cube(ofMaterial material, ofImage img)
     ofBoxPrimitive box;
     box.set(200);
 
-    ofMesh& mesh = box.getMesh();
+    box.getMesh().enableNormals();
 
-    float cubeSize = 2.0f; // taille du cube
-    float textureSize = std::max(img.getWidth(), img.getHeight()); // plus grand côté de l'image
+    //ofMesh& mesh = box.getMesh();
 
-    // Le facteur doit être "combien de fois" la texture couvre la taille du cube
-    float repeatFactor = textureSize / cubeSize;
+    //float cubeSize = 2.0f; // taille du cube
+    //float textureSize = std::max(img.getWidth(), img.getHeight()); // plus grand côté de l'image
 
-    for (int i = 0; i < mesh.getNumTexCoords(); ++i) {
-        ofVec2f texCoord = mesh.getTexCoord(i);
-        texCoord *= repeatFactor;
-        mesh.setTexCoord(i, texCoord);
-    }
+    //// Le facteur doit être "combien de fois" la texture couvre la taille du cube
+    //float repeatFactor = textureSize / cubeSize;
 
-    //material.begin();
-
-
-    //img.getTexture().bind();
-    box.drawFaces();
-    //img.getTexture().unbind();
+    //for (int i = 0; i < mesh.getNumTexCoords(); ++i) {
+    //    ofVec2f texCoord = mesh.getTexCoord(i);
+    //    texCoord *= repeatFactor;
+    //    mesh.setTexCoord(i, texCoord);
+    //}
+    box.mapTexCoords(0, 0, 1, 1);
 
     if (shader_active) {
         shader_active->begin();
+
+        send_common_matrices(shader_active);
 
         // propriétés du matériau
         shader_active->setUniform3f("color_ambient", toVec3f(material.getAmbientColor()));
@@ -254,13 +253,20 @@ void Geometrie::draw_cube(ofMaterial material, ofImage img)
         shader_active->setUniform3f("light_position", light_point.getGlobalPosition());
 
         // texture
+        //shader_active->setUniform1i("tex", 0); // assure que le shader lit la texture de l’unité 0
         shader_active->setUniformTexture("tex", img.getTexture(), 0);
 
         box.drawFaces();
         shader_active->end();
     }
+    else {
+        material.begin();
+        img.getTexture().bind();
+        box.drawFaces();
+        img.getTexture().unbind();
+        material.end();
+    }
 
-    //material.end();
     ofDisableDepthTest();
 }
 
@@ -282,10 +288,10 @@ void Geometrie::draw_sphere(ofMaterial material, ofImage img)
         shader_active->setUniform3f("color_specular", toVec3f(material.getSpecularColor()));
         shader_active->setUniform1f("brightness", material.getShininess());
 
-        shader_active->setUniform3f("light_position", light_point.getGlobalPosition());
-
         // texture
         shader_active->setUniformTexture("tex", img.getTexture(), 0);
+
+        send_common_matrices(shader_active);
 
         sphere.drawFaces();
         shader_active->end();
@@ -421,4 +427,24 @@ void Geometrie::update_mesh()
 
 ofVec3f Geometrie::toVec3f(const ofColor& c) {
     return ofVec3f(c.r / 255.0f, c.g / 255.0f, c.b / 255.0f);
+}
+
+void Geometrie::send_common_matrices(ofShader* shader)
+{
+    ofMatrix4x4 modelViewMatrix = ofGetCurrentMatrix(OF_MATRIX_MODELVIEW);
+    ofMatrix4x4 projectionMatrix = ofGetCurrentMatrix(OF_MATRIX_PROJECTION);
+    ofMatrix4x4 modelViewProjectionMatrix = modelViewMatrix * projectionMatrix;
+
+    glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(modelViewMatrix)));
+    shader->setUniformMatrix3f("normalMatrix", normalMatrix);
+
+
+    shader->setUniformMatrix4f("modelViewMatrix", modelViewMatrix);
+    shader->setUniformMatrix4f("projectionMatrix", projectionMatrix);
+    //shader->setUniformMatrix3f("normalMatrix", normalMatrix);
+
+    // Light position en espace vue
+    ofVec3f lightPosWorld = light_point.getGlobalPosition();
+    ofVec3f lightPosView = lightPosWorld * modelViewMatrix;
+    shader->setUniform3f("light_position", lightPosView);
 }
