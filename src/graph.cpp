@@ -359,10 +359,11 @@ void Graph::add_element3D(const std::array<int, 2>& mouse_press, const std::arra
 		element3D[index].lightAttribute.light.setSpotlight();
 		element3D[index].lightAttribute.light.setDiffuseColor(element3D[index].lightAttribute.diffuseColor);
 		element3D[index].lightAttribute.light.setSpecularColor(element3D[index].lightAttribute.specularColor);
+		element3D[index].lightAttribute.light.setPosition(mouse_press[0], mouse_press[1], 0);
 		element3D[index].lightAttribute.light.setOrientation(element3D[index].lightAttribute.orientation);
 		element3D[index].lightAttribute.light.setSpotConcentration(element3D[index].lightAttribute.concentration);
 		element3D[index].lightAttribute.light.setSpotlightCutOff(element3D[index].lightAttribute.lightCutOff);
-		element3D[index].lightAttribute.light.setPosition(mouse_press[0], mouse_press[1], 0);
+		
 		element3D[index].lightAttribute.light.setSpotlight();
 	}
 	else if (get_draw_shape_3D() == ElementScene3DType::point_light) {
