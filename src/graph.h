@@ -48,7 +48,7 @@ public:
 
 	ElementScene3DType Graph::get_draw_shape_3D(void) const;
 	void set_draw_shape_3D(const int& ElementScene3DType);
-	void Graph::delete_element3D(void);
+	int delete_element3D();
 
 	void load_image(string path);
 

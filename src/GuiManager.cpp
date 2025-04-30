@@ -23,6 +23,7 @@ void GuiManager::setup() {
     is_selected_image = false;
     showGraph3DTransformation = false;
     showGraph3DMats = false;
+    showGraph3DLights = false;
     element3D_material = -1;
     shader_mode = -1;
     element3D_texture = -1;
@@ -485,45 +486,73 @@ void GuiManager::draw(ElementScene2D* element2D, ElementScene3D* element3D, cons
                         break;
                     }
                     if (ImGui::Selectable(nom, element3D[i].is_selected)) {
-                        bool hadMaterial = (element3D[i].type == ElementScene3DType::cube ||
+                        bool hadMaterial = (
+                            element3D[i].type == ElementScene3DType::cube ||
                             element3D[i].type == ElementScene3DType::sphere ||
                             element3D[i].type == ElementScene3DType::cylinder ||
-                            element3D[i].type == ElementScene3DType::cone);
+                            element3D[i].type == ElementScene3DType::cone
+                            );
+
+                        bool isLight = (
+                            element3D[i].type == ElementScene3DType::directional_light ||
+                            element3D[i].type == ElementScene3DType::point_light ||
+                            element3D[i].type == ElementScene3DType::spot_light ||
+                            element3D[i].type == ElementScene3DType::ambiant
+                            );
+
+                        bool was_selected = element3D[i].is_selected;
+                        element3D[i].is_selected = !was_selected;
 
                         if (element3D[i].is_selected) {
-                            // UNSELECT
-                            item_selected3D -= 1;
-                            if (hadMaterial) {
-                                item_selected3D_with_material -= 1;
-                            }
-                            if (item_selected3D == 0) {
-                                showGraph3DTransformation = false;
-                                showGraph3DMats = false;
-                                transformation3D.fill(0.0f);
-                                transformationBufferIsInitialized = false; // <<< RESET the buffer flag
-                            }
-                            if (item_selected3D_with_material == 0) {
-                                showGraph3DMats = false;
-                            }
-                        }
-                        else {
-                            // SELECT
-                            item_selected3D += 1;
-                            if (hadMaterial) {
-                                item_selected3D_with_material += 1;
-                            }
-                            showGraph3DTransformation = true;
-                            if (item_selected3D_with_material > 0) {
+                            item_selected3D++;
+                            if (hadMaterial) item_selected3D_with_material++;
+
+                            if (!isLight)
+                                showGraph3DTransformation = true;
+                            else
+                                showGraph3DLights = true;
+
+                            if (item_selected3D_with_material > 0)
                                 showGraph3DMats = true;
-                            }
 
                             if (!transformationBufferIsInitialized) {
-                                transformation3D = element3D[i].transformation; // <<< COPY only if not yet initialized
+                                transformation3D = element3D[i].transformation;
                                 transformationBufferIsInitialized = true;
                             }
                         }
+                        else {
+                            item_selected3D--;
+                            if (hadMaterial) item_selected3D_with_material--;
 
-                        element3D[i].is_selected = !element3D[i].is_selected;
+                            // Check if anything is still selected
+                            bool anySelected = false;
+                            bool anyLightSelected = false;
+
+                            for (int j = 0; j < 30; ++j) {
+                                if (element3D[j].is_selected) {
+                                    anySelected = true;
+                                    if (element3D[j].type == ElementScene3DType::directional_light ||
+                                        element3D[j].type == ElementScene3DType::point_light ||
+                                        element3D[j].type == ElementScene3DType::spot_light ||
+                                        element3D[j].type == ElementScene3DType::ambiant) {
+                                        anyLightSelected = true;
+                                    }
+                                }
+                            }
+
+                            showGraph3DLights = anyLightSelected;
+
+                            if (!anySelected) {
+                                showGraph3DTransformation = false;
+                                showGraph3DMats = false;
+                                showGraph3DLights = false;
+                                transformation3D.fill(0.0f);
+                                transformationBufferIsInitialized = false;
+                            }
+
+                            if (item_selected3D_with_material <= 0)
+                                showGraph3DMats = false;
+                        }
                     }
                     ImGui::PopID();
                 }
@@ -541,6 +570,45 @@ void GuiManager::draw(ElementScene2D* element2D, ElementScene3D* element3D, cons
                     ImGui::SliderFloat("Proportion Y", &transformation3D[7], -10.0f, 10.0f, "%.1f px");
                     ImGui::SliderFloat("Proportion Z", &transformation3D[8], -10.0f, 10.0f, "%.1f px");
                     ImGui::PopItemWidth();
+                }
+            }
+            if (showGraph3DLights) {
+                if (ImGui::CollapsingHeader("Light Settings")) {
+                    for (int i = 0; i < 30; ++i) {
+                        if (element3D[i].is_selected &&
+                            (element3D[i].type == ElementScene3DType::directional_light ||
+                                element3D[i].type == ElementScene3DType::point_light ||
+                                element3D[i].type == ElementScene3DType::spot_light ||
+                                element3D[i].type == ElementScene3DType::ambiant)) {
+
+                            ImGui::PushID(i);
+                            ImGui::Text("Light %d", i);
+
+                            // Show editable position vector
+                            ImGui::InputFloat3("Position", element3D[i].lightAttribute.position.getPtr(), "%.1f");
+                            element3D[i].lightAttribute.light.setPosition(element3D[i].lightAttribute.position);
+
+                            // Optionally also allow rotation or direction
+                            if (element3D[i].type == ElementScene3DType::directional_light ||
+                                element3D[i].type == ElementScene3DType::spot_light) {
+                                ImGui::InputFloat3("Direction x (Euler)", element3D[i].lightAttribute.orientation.getPtr(), "%.1f");
+                                element3D[i].lightAttribute.light.lookAt(element3D[i].lightAttribute.orientation);
+                            }
+
+                            if (element3D[i].type == ElementScene3DType::directional_light ||
+                                element3D[i].type == ElementScene3DType::spot_light ||
+                                element3D[i].type == ElementScene3DType::point_light) {
+                                ImGui::InputFloat3("Diffuse", element3D[i].lightAttribute.diffuseColor.getPtr(), "%.1f");
+                                ImGui::InputFloat3("Specular", element3D[i].lightAttribute.specularColor.getPtr(), "%.1f");
+                                element3D[i].lightAttribute.light.setDiffuseColor(ofColor(element3D[i].lightAttribute.diffuseColor.x, element3D[i].lightAttribute.diffuseColor.y, element3D[i].lightAttribute.diffuseColor.z));
+                                element3D[i].lightAttribute.light.setSpecularColor(ofColor(element3D[i].lightAttribute.specularColor.x, element3D[i].lightAttribute.specularColor.y, element3D[i].lightAttribute.specularColor.z));
+                            }
+                            else {
+                                ImGui::InputFloat3("Ambient", element3D[i].lightAttribute.diffuseColor.getPtr(), "%.1f");
+                            }
+                            ImGui::PopID();
+                        }
+                    }
                 }
             }
             if (showGraph3DMats) {
