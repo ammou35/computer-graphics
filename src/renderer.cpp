@@ -50,17 +50,9 @@ void Renderer::update(const GuiManager& guiManager) {
 void Renderer::draw()
 {
     camera.begin();
-    //graph.geometrie.skybox.hdrImage.draw(0, 0, 512, 256);
     if (sky_box) {
         graph.geometrie.skybox.draw(camera);
     }
-    //if (get_is_mouse_button_pressed()) {
-    //    ofSetColor(255, 0, 0);
-    //    ofDrawSphere(screenToScene(get_mouse_current_x(), get_mouse_current_y()), 5);
-    //}
-    //ofTranslate(offset_x, offset_y, offset_z);
-    //ofRotateXDeg(rotation_x);
-    //ofRotateYDeg(rotation_y);
     if (graph.geometrie.shader_active != nullptr)
         graph.geometrie.shader_active->begin();
 
