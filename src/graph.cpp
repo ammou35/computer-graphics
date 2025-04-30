@@ -249,7 +249,7 @@ void Graph::add_element2D(const std::array<int, 2>& mouse_press, const std::arra
 
 	if (!free_indices.empty()) {
 		index = free_indices.back();
-		free_indices.pop_back(); // Réutilise un ancien index
+		free_indices.pop_back(); // Rï¿½utilise un ancien index
 	}
 	else {
 		index = element2D_buffer_head;
@@ -339,7 +339,7 @@ void Graph::add_element3D(const std::array<int, 2>& mouse_press, const std::arra
 
 	if (!free_indices.empty()) {
 		index = free_indices.back();
-		free_indices.pop_back(); // Réutilise un ancien index
+		free_indices.pop_back(); // Rï¿½utilise un ancien index
 	}
 	else {
 		index = element3D_buffer_head;
@@ -356,11 +356,11 @@ void Graph::add_element3D(const std::array<int, 2>& mouse_press, const std::arra
 		element3D[index].lightAttribute.orientation = ofVec3f(0.0f, 0.0f, 0.0f);
 		element3D[index].lightAttribute.concentration = 2.0f;
 		element3D[index].lightAttribute.lightCutOff = 30.0f;
-		element3D[index].lightAttribute.position = ofVec3f(mouse_press[0], mouse_press[1], 100);
+		element3D[index].lightAttribute.position = ofVec3f(mouse_press[0], mouse_press[1], 0);
 		element3D[index].lightAttribute.light.setSpotlight();
 		element3D[index].lightAttribute.light.setDiffuseColor(ofColor(element3D[index].lightAttribute.diffuseColor.x, element3D[index].lightAttribute.diffuseColor.y, element3D[index].lightAttribute.diffuseColor.z));
 		element3D[index].lightAttribute.light.setSpecularColor(ofColor(element3D[index].lightAttribute.specularColor.x, element3D[index].lightAttribute.specularColor.y, element3D[index].lightAttribute.specularColor.z));
-		element3D[index].lightAttribute.light.setPosition(mouse_press[0], mouse_press[1], 100);
+		element3D[index].lightAttribute.light.setPosition(mouse_press[0], mouse_press[1], 0);
 		element3D[index].lightAttribute.light.lookAt(element3D[index].lightAttribute.orientation);
 		element3D[index].lightAttribute.light.setSpotConcentration(element3D[index].lightAttribute.concentration);
 		element3D[index].lightAttribute.light.setSpotlightCutOff(element3D[index].lightAttribute.lightCutOff);
@@ -373,10 +373,10 @@ void Graph::add_element3D(const std::array<int, 2>& mouse_press, const std::arra
 		element3D[index].lightAttribute.orientation = ofVec3f(0.0f, 0.0f, 0.0f);
 		element3D[index].lightAttribute.concentration = 0.0f;
 		element3D[index].lightAttribute.lightCutOff = 0.0f;
-		element3D[index].lightAttribute.position = ofVec3f(mouse_press[0], mouse_press[1], 100);
+		element3D[index].lightAttribute.position = ofVec3f(mouse_press[0], mouse_press[1], 0);
 		element3D[index].lightAttribute.light.setDiffuseColor(ofColor(element3D[index].lightAttribute.diffuseColor.x, element3D[index].lightAttribute.diffuseColor.y, element3D[index].lightAttribute.diffuseColor.z));
 		element3D[index].lightAttribute.light.setSpecularColor(ofColor(element3D[index].lightAttribute.specularColor.x, element3D[index].lightAttribute.specularColor.y, element3D[index].lightAttribute.specularColor.z));
-		element3D[index].lightAttribute.light.setPosition(mouse_press[0], mouse_press[1], 100);
+		element3D[index].lightAttribute.light.setPosition(mouse_press[0], mouse_press[1], 0);
 		element3D[index].lightAttribute.light.lookAt(element3D[index].lightAttribute.orientation);
 		element3D[index].lightAttribute.light.setPointLight();
 	}
@@ -387,10 +387,10 @@ void Graph::add_element3D(const std::array<int, 2>& mouse_press, const std::arra
 		element3D[index].lightAttribute.orientation = ofVec3f(0.0f, 0.0f, 0.0f);
 		element3D[index].lightAttribute.concentration = 0.0f;
 		element3D[index].lightAttribute.lightCutOff = 0.0f;
-		element3D[index].lightAttribute.position = ofVec3f(mouse_press[0], mouse_press[1], 100);
+		element3D[index].lightAttribute.position = ofVec3f(mouse_press[0], mouse_press[1], 0);
 		element3D[index].lightAttribute.light.setDiffuseColor(ofColor(element3D[index].lightAttribute.diffuseColor.x, element3D[index].lightAttribute.diffuseColor.y, element3D[index].lightAttribute.diffuseColor.z));
 		element3D[index].lightAttribute.light.setSpecularColor(ofColor(element3D[index].lightAttribute.specularColor.x, element3D[index].lightAttribute.specularColor.y, element3D[index].lightAttribute.specularColor.z));
-		element3D[index].lightAttribute.light.setPosition(mouse_press[0], mouse_press[1], 100);
+		element3D[index].lightAttribute.light.setPosition(mouse_press[0], mouse_press[1], 0);
 		element3D[index].lightAttribute.light.lookAt(element3D[index].lightAttribute.orientation);
 		element3D[index].lightAttribute.light.setDirectional();
 	}
@@ -410,7 +410,7 @@ void Graph::add_element3D(const std::array<int, 2>& mouse_press, const std::arra
 void Graph::delete_element2D(void) {
 	for (int index = 0; index < buffer_count; index++) {
 		if (element2D[index].is_selected) {
-			element2D[index].type = ElementScene2DType::none; // Marquer comme supprimé
+			element2D[index].type = ElementScene2DType::none; // Marquer comme supprimï¿½
 			element2D[index].is_selected = false;
 			for (int ptr = 0; ptr < 4; ptr++) {
 				if (element2D[index].primitives[ptr] != nullptr) {
@@ -418,7 +418,7 @@ void Graph::delete_element2D(void) {
 				}
 			}
 			element2D[index].primitives = {nullptr, nullptr, nullptr, nullptr};
-			free_indices.push_back(index); // Ajouter à la liste des indices libres
+			free_indices.push_back(index); // Ajouter ï¿½ la liste des indices libres
 		}
 	}
 }

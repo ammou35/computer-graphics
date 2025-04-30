@@ -19,3 +19,4 @@
 .vs/
 *.log
 *.ini
+bin/imgui.ini
