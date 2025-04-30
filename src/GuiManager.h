@@ -32,10 +32,14 @@ public:
     bool is_selected_image;
     bool showGraph3DTransformation;
     bool showGraph3DMats;
+    bool showGraph3DLights;
     int element3D_material;
     int shader_mode;
     int element3D_texture;
     int element3D_filtre;
+    int item_selected3D = 0;
+    int item_selected3D_with_material = 0;
+    bool transformationBufferIsInitialized = false;
 private:
     ofxImGui::Gui gui;
     int typeVectorPrimitive_;
@@ -47,7 +51,4 @@ private:
     bool ui_color_picker;
     bool mode_2d;
     int item_selected;
-    int item_selected3D;
-    int item_selected3D_with_material = 0;
-    bool transformationBufferIsInitialized = false;
 };

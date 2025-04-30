@@ -96,9 +96,9 @@ void Graph::update(const ofColor& stroke_color, const ofColor& fill_color, const
 
 			element3D[index].transformation = transformation3D;
 
-			if (element3D[index].type == ElementScene3DType::point_light || element3D[index].type == ElementScene3DType::directional_light || element3D[index].type == ElementScene3DType::spot_light) {
+			/*if (element3D[index].type == ElementScene3DType::point_light || element3D[index].type == ElementScene3DType::directional_light || element3D[index].type == ElementScene3DType::spot_light) {
 				element3D[index].lightAttribute.light.setPosition(element3D[index].transformation[0], element3D[index].transformation[1], element3D[index].transformation[2]);
-			}
+			}*/
 
 			if (bounding_box) {
 				element3D[index].bounding_box = true;
@@ -351,47 +351,52 @@ void Graph::add_element3D(const std::array<int, 2>& mouse_press, const std::arra
 	element3D[index].material = ElementScene3DMaterial::none;
 
 	if (get_draw_shape_3D() == ElementScene3DType::spot_light) {
-		element3D[index].lightAttribute.diffuseColor = ofColor(191, 191, 191);
-		element3D[index].lightAttribute.specularColor = ofColor(191, 191, 191);
+		element3D[index].lightAttribute.diffuseColor = ofVec3f(191, 191, 191);
+		element3D[index].lightAttribute.specularColor = ofVec3f(191, 191, 191);
 		element3D[index].lightAttribute.orientation = ofVec3f(0.0f, 0.0f, 0.0f);
 		element3D[index].lightAttribute.concentration = 2.0f;
 		element3D[index].lightAttribute.lightCutOff = 30.0f;
+		element3D[index].lightAttribute.position = ofVec3f(mouse_press[0], mouse_press[1], 100);
 		element3D[index].lightAttribute.light.setSpotlight();
-		element3D[index].lightAttribute.light.setDiffuseColor(element3D[index].lightAttribute.diffuseColor);
-		element3D[index].lightAttribute.light.setSpecularColor(element3D[index].lightAttribute.specularColor);
-		element3D[index].lightAttribute.light.setPosition(mouse_press[0], mouse_press[1], 0);
-		element3D[index].lightAttribute.light.setOrientation(element3D[index].lightAttribute.orientation);
+		element3D[index].lightAttribute.light.setDiffuseColor(ofColor(element3D[index].lightAttribute.diffuseColor.x, element3D[index].lightAttribute.diffuseColor.y, element3D[index].lightAttribute.diffuseColor.z));
+		element3D[index].lightAttribute.light.setSpecularColor(ofColor(element3D[index].lightAttribute.specularColor.x, element3D[index].lightAttribute.specularColor.y, element3D[index].lightAttribute.specularColor.z));
+		element3D[index].lightAttribute.light.setPosition(mouse_press[0], mouse_press[1], 100);
+		element3D[index].lightAttribute.light.lookAt(element3D[index].lightAttribute.orientation);
 		element3D[index].lightAttribute.light.setSpotConcentration(element3D[index].lightAttribute.concentration);
 		element3D[index].lightAttribute.light.setSpotlightCutOff(element3D[index].lightAttribute.lightCutOff);
 		
 		element3D[index].lightAttribute.light.setSpotlight();
 	}
 	else if (get_draw_shape_3D() == ElementScene3DType::point_light) {
-		element3D[index].lightAttribute.diffuseColor = ofColor(255, 255, 255);
-		element3D[index].lightAttribute.specularColor = ofColor(191, 191, 191);
+		element3D[index].lightAttribute.diffuseColor = ofVec3f(255, 255, 255);
+		element3D[index].lightAttribute.specularColor = ofVec3f(191, 191, 191);
 		element3D[index].lightAttribute.orientation = ofVec3f(0.0f, 0.0f, 0.0f);
 		element3D[index].lightAttribute.concentration = 0.0f;
 		element3D[index].lightAttribute.lightCutOff = 0.0f;
-		element3D[index].lightAttribute.light.setDiffuseColor(element3D[index].lightAttribute.diffuseColor);
-		element3D[index].lightAttribute.light.setSpecularColor(element3D[index].lightAttribute.specularColor);
-		element3D[index].lightAttribute.light.setOrientation(element3D[index].lightAttribute.orientation);
+		element3D[index].lightAttribute.position = ofVec3f(mouse_press[0], mouse_press[1], 100);
+		element3D[index].lightAttribute.light.setDiffuseColor(ofColor(element3D[index].lightAttribute.diffuseColor.x, element3D[index].lightAttribute.diffuseColor.y, element3D[index].lightAttribute.diffuseColor.z));
+		element3D[index].lightAttribute.light.setSpecularColor(ofColor(element3D[index].lightAttribute.specularColor.x, element3D[index].lightAttribute.specularColor.y, element3D[index].lightAttribute.specularColor.z));
+		element3D[index].lightAttribute.light.setPosition(mouse_press[0], mouse_press[1], 100);
+		element3D[index].lightAttribute.light.lookAt(element3D[index].lightAttribute.orientation);
 		element3D[index].lightAttribute.light.setPointLight();
 	}
 	else if (get_draw_shape_3D() == ElementScene3DType::directional_light) {
 		element3D[index].lightAttribute.light;
-		element3D[index].lightAttribute.diffuseColor = ofColor(31, 255, 31);
-		element3D[index].lightAttribute.specularColor = ofColor(191, 191, 191);
+		element3D[index].lightAttribute.diffuseColor = ofVec3f(31, 255, 31);
+		element3D[index].lightAttribute.specularColor = ofVec3f(191, 191, 191);
 		element3D[index].lightAttribute.orientation = ofVec3f(0.0f, 0.0f, 0.0f);
 		element3D[index].lightAttribute.concentration = 0.0f;
 		element3D[index].lightAttribute.lightCutOff = 0.0f;
-		element3D[index].lightAttribute.light.setDiffuseColor(element3D[index].lightAttribute.diffuseColor);
-		element3D[index].lightAttribute.light.setSpecularColor(element3D[index].lightAttribute.specularColor);
-		element3D[index].lightAttribute.light.setOrientation(element3D[index].lightAttribute.orientation);
+		element3D[index].lightAttribute.position = ofVec3f(mouse_press[0], mouse_press[1], 100);
+		element3D[index].lightAttribute.light.setDiffuseColor(ofColor(element3D[index].lightAttribute.diffuseColor.x, element3D[index].lightAttribute.diffuseColor.y, element3D[index].lightAttribute.diffuseColor.z));
+		element3D[index].lightAttribute.light.setSpecularColor(ofColor(element3D[index].lightAttribute.specularColor.x, element3D[index].lightAttribute.specularColor.y, element3D[index].lightAttribute.specularColor.z));
+		element3D[index].lightAttribute.light.setPosition(mouse_press[0], mouse_press[1], 100);
+		element3D[index].lightAttribute.light.lookAt(element3D[index].lightAttribute.orientation);
 		element3D[index].lightAttribute.light.setDirectional();
 	}
 	else if (get_draw_shape_3D() == ElementScene3DType::ambiant) {
-		element3D[index].lightAttribute.diffuseColor = ofColor(127, 127, 127);
-		element3D[index].lightAttribute.specularColor = ofColor(191, 191, 191);
+		element3D[index].lightAttribute.diffuseColor = ofVec3f(127, 127, 127);
+		element3D[index].lightAttribute.specularColor = ofVec3f(191, 191, 191);
 		element3D[index].lightAttribute.orientation = ofVec3f(0.0f, 0.0f, 0.0f);
 		element3D[index].lightAttribute.concentration = 0.0f;
 		element3D[index].lightAttribute.lightCutOff = 0.0f;
@@ -418,14 +423,19 @@ void Graph::delete_element2D(void) {
 	}
 }
 
-void Graph::delete_element3D(void) {
-	for (int index = 0; index < buffer_count; index++) {
-		if (element3D[index].is_selected) {
-			element3D[index].type = ElementScene3DType::none; // Marquer comme supprimé
-			element3D[index].is_selected = false;
-			free_indices.push_back(index); // Ajouter à la liste des indices libres
+int Graph::delete_element3D() {
+	int count_unselected = 0;
+
+	for (int i = 0; i < buffer_count; ++i) {
+		if (element3D[i].is_selected) {
+			element3D[i].is_selected = false;
+			element3D[i].type = ElementScene3DType::none;
+			element3D[i].transformation = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f };
+			count_unselected++;
 		}
 	}
+
+	return count_unselected;
 }
 
 void Graph::set_draw_shape(const int& type_ElementScene) {
@@ -496,7 +506,7 @@ void Graph::light_on() {
 			element3D[i].lightAttribute.light.enable();
 		}
 		else if (element3D[i].type == ElementScene3DType::ambiant) {
-			ofSetGlobalAmbientColor(element3D[i].lightAttribute.diffuseColor);
+			ofSetGlobalAmbientColor(ofColor(element3D[i].lightAttribute.diffuseColor.x, element3D[i].lightAttribute.diffuseColor.y, element3D[i].lightAttribute.diffuseColor.z));
 		}
 	}
 }

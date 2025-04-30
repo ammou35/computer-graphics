@@ -14,8 +14,8 @@ enum class ElementScene3DTexture { none, wood, sand, briks, honeycomb, sponge };
 struct LightAttribute {
 	ofLight light;
 	ElementScene3DType type;
-	ofColor diffuseColor;
-	ofColor specularColor;
+	ofVec3f diffuseColor;
+	ofVec3f specularColor;
 	ofVec3f position;
 	ofVec3f orientation;
 	float concentration;

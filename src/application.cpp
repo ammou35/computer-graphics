@@ -98,6 +98,7 @@ void Application::draw()
 //--------------------------------------------------------------
 void Application::keyPressed(int key)
 {
+    int removed;
     switch (key)
     {
     case OF_KEY_LEFT: // key ←
@@ -142,7 +143,18 @@ void Application::keyPressed(int key)
 
     case OF_KEY_DEL:
         renderer.graph.delete_element2D();
-        renderer.graph.delete_element3D();
+        removed = renderer.graph.delete_element3D();
+
+        if (removed > 0) {
+            guiManager.item_selected3D = 0;
+            guiManager.item_selected3D_with_material = 0;
+            guiManager.transformationBufferIsInitialized = false;
+            guiManager.showGraph3DTransformation = false;
+            guiManager.showGraph3DMats = false;
+            guiManager.showGraph3DLights = false;
+            guiManager.transformation3D.fill(0.0f);
+        }
+        break;
 
     default:
         break;
