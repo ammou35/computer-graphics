@@ -409,6 +409,7 @@ void Graph::add_element3D(const std::array<int, 2>& mouse_press, const std::arra
 	element3D[index].filtre = ElementScene3DFiltre::none;
 	element3D[index].is_selected = false;
 	element3D[index].material = ElementScene3DMaterial::none;
+	element3D[index].normal_mapping = false;
 
 	if (get_draw_shape_3D() == ElementScene3DType::spot_light) {
 		element3D[index].lightAttribute.diffuseColor = ofVec3f(191, 191, 191);

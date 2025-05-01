@@ -1,4 +1,4 @@
-#version 330 core
+#version 330
 
 uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
@@ -6,13 +6,17 @@ uniform mat3 normalMatrix;
 
 in vec3 position;
 in vec3 normal;
+in vec2 texcoord;
 
 flat out vec3 flat_normal;
-out vec3 frag_pos;
+out vec3 surface_position;
+out vec2 surface_texcoord;
 
-void main() {
-    vec4 view_pos = modelViewMatrix * vec4(position, 1.0);
-    frag_pos = view_pos.xyz;
-    flat_normal = normalize(normalMatrix * normal);  // flat => pas interpolé
-    gl_Position = projectionMatrix * view_pos;
+void main()
+{
+    surface_position = vec3(modelViewMatrix * vec4(position, 1.0));
+    flat_normal = normalize(normalMatrix * normal);
+    surface_texcoord = texcoord;
+
+    gl_Position = projectionMatrix * vec4(surface_position, 1.0);
 }

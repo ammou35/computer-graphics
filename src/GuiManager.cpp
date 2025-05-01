@@ -648,6 +648,29 @@ void GuiManager::draw(ElementScene2D* element2D, ElementScene3D* element3D, cons
                             ImGui::EndTabItem();
                         }
                         if (ImGui::BeginTabItem("Textures")) {
+                            // Show normal mapping toggle if only one element is selected and has a material
+                            int selectedWithMaterial = -1;
+                            int countSelected = 0;
+                            for (int i = 0; i < 30; ++i) {
+                                if (element3D[i].is_selected &&
+                                    (element3D[i].type == ElementScene3DType::cube ||
+                                        element3D[i].type == ElementScene3DType::sphere ||
+                                        element3D[i].type == ElementScene3DType::cylinder ||
+                                        element3D[i].type == ElementScene3DType::cone)) {
+                                    selectedWithMaterial = i;
+                                    ++countSelected;
+                                }
+                            }
+
+                            if (countSelected == 1) {
+                                ImGui::PushID(selectedWithMaterial + 1000);
+                                bool& normalMapEnabled = element3D[selectedWithMaterial].normal_mapping;
+                                if (ImGui::Checkbox("Use Normal Mapping", &normalMapEnabled)) {
+                                    // Optionally, trigger refresh or re-bind shader
+                                }
+                                ImGui::PopID();
+                            }
+
                             if (ImGui::RadioButton("None", element3D_texture == -1)) {
                                 element3D_texture = -1;
                             }

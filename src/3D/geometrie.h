@@ -30,6 +30,7 @@ struct ElementScene3D {
 	std::array<float, 9> transformation; // Translation(3), rotation(3), proportion(3)
 	bool is_selected;
 	bool bounding_box;
+	bool normal_mapping;
 	ElementScene3DMaterial material;
 	ElementScene3DTexture texture;
 	ElementScene3DFiltre filtre;
