@@ -315,9 +315,13 @@ void Application::mousePressed(int x, int y, int button) {
 
         // Project mouse onto that plane without wrong offset
         corrected_mouse = renderer.screenToViewPlane(x, y, plane_origin, plane_normal);
+        renderer.set_mouse_current_x(x);
+        renderer.set_mouse_current_y(y);
+        renderer.set_mouse_press_x(x);
+        renderer.set_mouse_press_y(y);
 
         // Sinon (on n'a pas cliqué sur un point), créer une nouvelle grille si demandé
-        if (guiManager.get_type_vector_primitive() == 20) {
+        if (guiManager.get_type_vector_primitive() == 20 && renderer.is_mouse_in_draw_area()) {
             for (int i = 0; i < 4; ++i) {
                 for (int j = 0; j < 4; ++j) {
                     renderer.graph.geometrie.control_grid[i][j].x = corrected_mouse.x + (i - 1.5f) * 100;
@@ -328,10 +332,6 @@ void Application::mousePressed(int x, int y, int button) {
             renderer.graph.geometrie.update_mesh();
             renderer.graph.geometrie.is_bezier_curve = true;
         }
-        renderer.set_mouse_current_x(x);
-        renderer.set_mouse_current_y(y);
-        renderer.set_mouse_press_x(x);
-        renderer.set_mouse_press_y(y);
     }
 }
 
