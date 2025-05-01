@@ -122,10 +122,6 @@ void Graph::update(const ofColor& stroke_color, const ofColor& fill_color, const
 
 			element3D[index].transformation = transformation3D;
 
-			/*if (element3D[index].type == ElementScene3DType::point_light || element3D[index].type == ElementScene3DType::directional_light || element3D[index].type == ElementScene3DType::spot_light) {
-				element3D[index].lightAttribute.light.setPosition(element3D[index].transformation[0], element3D[index].transformation[1], element3D[index].transformation[2]);
-			}*/
-
 			if (bounding_box) {
 				element3D[index].bounding_box = true;
 			}
@@ -238,13 +234,20 @@ void Graph::draw(const std::array<int, 2>& mouse_press, const std::array<int, 2>
 		//	filtre = geometrie.filtre_None;
 		//	break;
 		//}
+		if (element3D[i].type == ElementScene3DType::point_light ||
+			element3D[i].type == ElementScene3DType::spot_light ||
+			element3D[i].type == ElementScene3DType::directional_light)
+		{
+			element3D[i].lightAttribute.light.setGlobalPosition(element3D[i].lightAttribute.position.x, element3D[i].lightAttribute.position.y, element3D[i].lightAttribute.position.z);
+		}
+
 		ofEnableLighting();
 		light_on();
 		switch (element3D[i].type) {
 			case ElementScene3DType::none:
 				break;
 			case ElementScene3DType::cube:
-				geometrie.draw_cube(material, texture, element3D[i].filtre);
+				geometrie.draw_cube(material, texture, element3D[i].filtre, element3D);
 				break;
 			case ElementScene3DType::sphere:
 				geometrie.draw_sphere(material, texture);
@@ -401,6 +404,9 @@ void Graph::add_element3D(const std::array<int, 2>& mouse_press, const std::arra
 	}
 
 	element3D[index].type = get_draw_shape_3D();
+	element3D[index].material = ElementScene3DMaterial::none;
+	element3D[index].texture = ElementScene3DTexture::none;
+	element3D[index].filtre = ElementScene3DFiltre::none;
 	element3D[index].is_selected = false;
 	element3D[index].material = ElementScene3DMaterial::none;
 
@@ -430,7 +436,7 @@ void Graph::add_element3D(const std::array<int, 2>& mouse_press, const std::arra
 		element3D[index].lightAttribute.position = ofVec3f(mouse_press[0], mouse_press[1], 0);
 		element3D[index].lightAttribute.light.setDiffuseColor(ofColor(element3D[index].lightAttribute.diffuseColor.x, element3D[index].lightAttribute.diffuseColor.y, element3D[index].lightAttribute.diffuseColor.z));
 		element3D[index].lightAttribute.light.setSpecularColor(ofColor(element3D[index].lightAttribute.specularColor.x, element3D[index].lightAttribute.specularColor.y, element3D[index].lightAttribute.specularColor.z));
-		element3D[index].lightAttribute.light.setPosition(mouse_press[0], mouse_press[1], 0);
+		element3D[index].lightAttribute.light.setGlobalPosition(mouse_press[0], mouse_press[1], 0);
 		element3D[index].lightAttribute.light.lookAt(element3D[index].lightAttribute.orientation);
 		element3D[index].lightAttribute.light.setPointLight();
 	}
@@ -446,6 +452,7 @@ void Graph::add_element3D(const std::array<int, 2>& mouse_press, const std::arra
 		element3D[index].lightAttribute.light.setSpecularColor(ofColor(element3D[index].lightAttribute.specularColor.x, element3D[index].lightAttribute.specularColor.y, element3D[index].lightAttribute.specularColor.z));
 		element3D[index].lightAttribute.light.setPosition(mouse_press[0], mouse_press[1], 0);
 		element3D[index].lightAttribute.light.lookAt(element3D[index].lightAttribute.orientation);
+		element3D[index].lightAttribute.orientation = element3D[index].lightAttribute.light.getLookAtDir(); // ← this is the key
 		element3D[index].lightAttribute.light.setDirectional();
 	}
 	else if (get_draw_shape_3D() == ElementScene3DType::ambiant) {

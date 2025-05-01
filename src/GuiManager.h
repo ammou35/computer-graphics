@@ -41,6 +41,7 @@ public:
     int item_selected3D = 0;
     int item_selected3D_with_material = 0;
     bool transformationBufferIsInitialized = false;
+    float exposure;
 private:
     ofxImGui::Gui gui;
     int typeVectorPrimitive_;

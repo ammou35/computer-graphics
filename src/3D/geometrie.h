@@ -39,9 +39,6 @@ struct ElementScene3D {
 class Geometrie
 {
 public:
-	ofLight light;
-	ofLight light_point;
-
 	ofxAssimpModelLoader donut;
 	ofxAssimpModelLoader plate;
 	ofxAssimpModelLoader spaghetti_getter;
@@ -72,6 +69,7 @@ public:
 	ofShader blinn_phong_shader;
 	ofShader lambert_shader;
 	ofShader gouraud_shader;
+	ofShader flat_shader;
 
 	ofFbo objectFbo;
 
@@ -112,7 +110,7 @@ public:
 	void update(ElementScene3D* element3D);
 	void draw();
 
-	void draw_cube(ofMaterial material, ofImage img, ElementScene3DFiltre filtre);   // Fonction pour ajouter un cube
+	void draw_cube(ofMaterial material, ofImage img, ElementScene3DFiltre filtre, ElementScene3D* element3D);   // Fonction pour ajouter un cube
 	void draw_sphere(ofMaterial material, ofImage img); // Fonction pour ajouter une sph�re
 	void draw_cylinder() const; // Fonction pour ajouter un cylindre
 	void draw_cone() const; // Fonction pour ajouter un c�ne
@@ -132,5 +130,4 @@ public:
 
 	ofVec3f toVec3f(const ofColor& c);
 	void send_common_matrices(ofShader* shader);
-	void send_light_to_shader(ofShader* shader, int i, const ElementScene3D& elem, const ofMatrix4x4& modelViewMatrix);
 };

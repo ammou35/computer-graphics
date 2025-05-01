@@ -62,6 +62,7 @@ void Geometrie::setup()
     gouraud_shader.load("shaders/gouraud_vs.glsl", "shaders/gouraud_fs.glsl");
     phong_shader.load("shaders/phong_vs.glsl", "shaders/phong_fs.glsl");
     blinn_phong_shader.load("shaders/blinn_phong_vs.glsl", "shaders/blinn_phong_fs.glsl");
+    flat_shader.load("shaders/flat_vs.glsl", "shaders/flat_fs.glsl");
     ofLogNotice() << "Blinn-Phong loaded: " << blinn_phong_shader.isLoaded();
 
     // Default shader active
@@ -143,23 +144,8 @@ void Geometrie::setup()
 
 void Geometrie::update(ElementScene3D* element3D)
 {
-    ofMatrix4x4 modelViewMatrix = ofGetCurrentMatrix(OF_MATRIX_MODELVIEW); // AJOUT�
 
-    for (int i = 0; i < 30; ++i) {
-        if (element3D[i].type == ElementScene3DType::point_light ||
-            element3D[i].type == ElementScene3DType::spot_light ||
-            element3D[i].type == ElementScene3DType::directional_light) {
-
-            ofVec3f world_pos = element3D[i].lightAttribute.light.getGlobalPosition();
-            ofVec3f view_pos = world_pos * modelViewMatrix; // TRANSFORMATION
-
-            ofVec3f color = element3D[i].lightAttribute.diffuseColor / 255.0f;
-
-            light_positions.push_back(view_pos);   // ESPACE VUE
-            light_colors.push_back(color);
-        }
-    }
-
+    glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(ofGetCurrentMatrix(OF_MATRIX_MODELVIEW))));
     switch (shader_mode)
     {
     case 1:
@@ -169,7 +155,7 @@ void Geometrie::update(ElementScene3D* element3D)
         shader_active->setUniform3f("color_ambient", 0.1f, 0.1f, 0.1f);
         shader_active->setUniform3f("color_diffuse", 0.6f, 0.6f, 0.6f);
         shader_active->setUniform1f("brightness", 0.0f);
-        shader_active->setUniform3f("light_position", light_point.getGlobalPosition());
+        //shader_active->setUniform3f("light_position", light_point.getGlobalPosition());
         shader_active->end();
         break;
 
@@ -181,7 +167,7 @@ void Geometrie::update(ElementScene3D* element3D)
         shader_active->setUniform3f("color_diffuse", 0.6f, 0.6f, 0.0f);
         shader_active->setUniform3f("color_specular", 1.0f, 1.0f, 0.0f);
         shader_active->setUniform1f("brightness", 10.0f);
-        shader_active->setUniform3f("light_position", light_point.getGlobalPosition());
+        //shader_active->setUniform3f("light_position", light_point.getGlobalPosition());
         shader_active->end();
         break;
 
@@ -193,7 +179,7 @@ void Geometrie::update(ElementScene3D* element3D)
         shader_active->setUniform3f("color_diffuse", 0.6f, 0.0f, 0.6f);
         shader_active->setUniform3f("color_specular", 1.0f, 1.0f, 0.0f);
         shader_active->setUniform1f("brightness", 10.0f);
-        shader_active->setUniform3f("light_position", light_point.getGlobalPosition());
+        //->setUniform3f("light_position", light_point.getGlobalPosition());
         shader_active->end();
         break;
 
@@ -206,13 +192,28 @@ void Geometrie::update(ElementScene3D* element3D)
         shader_active->setUniform3f("color_diffuse", 0.0f, 0.6f, 0.6f);
         shader_active->setUniform3f("color_specular", 1.0f, 1.0f, 0.0f);
         shader_active->setUniform1f("brightness", 10.0f);
-        shader_active->setUniform1i("num_lights", light_positions.size());
+        //shader_active->setUniform1i("num_lights", light_positions.size());
 
-        for (int i = 0; i < light_positions.size(); ++i) {
-            shader_active->setUniform3f("light_positions[" + ofToString(i) + "]", light_positions[i]);
-            shader_active->setUniform3f("light_colors[" + ofToString(i) + "]", light_colors[i]);
-        }
+        shader_active->end();
+        break;
 
+    case 5:
+        break;
+
+    case 6:
+
+        shader_active = &flat_shader;
+        shader_name = "Blinn-Phong";
+        shader_active->begin();
+        shader_active->setUniformMatrix4f("modelViewMatrix", ofGetCurrentMatrix(OF_MATRIX_MODELVIEW));
+        shader_active->setUniformMatrix4f("projectionMatrix", ofGetCurrentMatrix(OF_MATRIX_PROJECTION));
+
+        
+        shader_active->setUniformMatrix3f("normalMatrix", normalMatrix);
+
+        shader_active->setUniform3f("light_position", ofVec3f(100, 200, 300));
+        shader_active->setUniform3f("color_diffuse", ofVec3f(0.8, 0.5, 0.3));
+        shader_active->setUniform3f("color_ambient", ofVec3f(0.1, 0.1, 0.1));
         shader_active->end();
         break;
 
@@ -245,11 +246,14 @@ void Geometrie::draw_bounding_box() const {
     ofDrawBox(0, 0, 0, 100);
 }
 
-void Geometrie::draw_cube(ofMaterial material, ofImage img, ElementScene3DFiltre filtre) {
+void Geometrie::draw_cube(ofMaterial material, ofImage img, ElementScene3DFiltre filtre, ElementScene3D* element3D) {
+
+    ofMatrix4x4 modelViewMatrix = ofGetCurrentMatrix(OF_MATRIX_MODELVIEW); // AJOUT�
     ofEnableDepthTest();
     ofBoxPrimitive box;
     box.set(200);
     box.getMesh().enableNormals();
+    box.mapTexCoords(0, 0, 1, 1);
     box.mapTexCoordsFromTexture(img.getTexture()); // ici correct
 
     bool useSpecialFilter = (filtre != ElementScene3DFiltre::none);
@@ -270,27 +274,67 @@ void Geometrie::draw_cube(ofMaterial material, ofImage img, ElementScene3DFiltre
     }
     else {
         if (shader_active && shader_active->isLoaded()) {
+
+            std::vector<ofVec3f> light_positions;
+            std::vector<ofVec3f> light_colors;
+            std::vector<ofVec3f> light_directions;
+            std::vector<int> light_types;
+            std::vector<float> spot_cutoffs;
+
+            ofMatrix4x4 modelViewMatrix = ofGetCurrentMatrix(OF_MATRIX_MODELVIEW);
+
+            for (int i = 0; i < 30; ++i) {
+                const auto& e = element3D[i];
+                if (e.type == ElementScene3DType::point_light ||
+                    e.type == ElementScene3DType::directional_light ||
+                    e.type == ElementScene3DType::spot_light) {
+
+                    ofVec3f world_pos = e.lightAttribute.light.getGlobalPosition();
+                    ofVec3f view_pos = world_pos * modelViewMatrix;
+                    glm::vec3 dir = glm::vec3(e.lightAttribute.orientation);
+                    glm::vec3 view_dir = glm::mat3(modelViewMatrix) * dir;
+                    light_directions.push_back(ofVec3f(view_dir)); // convert back if needed
+
+                    light_positions.push_back(view_pos);
+                    light_colors.push_back(e.lightAttribute.diffuseColor / 255.0f); // normalize
+
+                    if (e.type == ElementScene3DType::point_light) {
+                        light_types.push_back(0);
+                        spot_cutoffs.push_back(0.0f);
+                    }
+                    else if (e.type == ElementScene3DType::directional_light) {
+                        light_types.push_back(1);
+                        spot_cutoffs.push_back(0.0f);
+                        ofLogNotice() << "Directional dir = " << e.lightAttribute.orientation;
+                    }
+                    else if (e.type == ElementScene3DType::spot_light) {
+                        light_types.push_back(2);
+                        spot_cutoffs.push_back(cos(ofDegToRad(e.lightAttribute.lightCutOff)));
+                    }
+                }
+            }
+
             shader_active->begin();
+            
+            send_common_matrices(shader_active);
+            shader_active->setUniform3f("color_ambient", toVec3f(material.getAmbientColor()));
+            shader_active->setUniform3f("color_diffuse", toVec3f(material.getDiffuseColor()));
+            shader_active->setUniform3f("color_specular", toVec3f(material.getSpecularColor()));
+            shader_active->setUniform1f("brightness", 50.0f);
 
-        send_common_matrices(shader_active);
+            int count = std::min((int)light_positions.size(), 30);
+            shader_active->setUniform1i("num_lights", count);
+            if (count > 0) {
+                shader_active->setUniform3fv("light_positions", &light_positions[0].x, count);
+                shader_active->setUniform3fv("light_colors", &light_colors[0].x, count);
+                shader_active->setUniform3fv("light_directions", &light_directions[0].x, count);
+                shader_active->setUniform1iv("light_type", &light_types[0], count);
+                shader_active->setUniform1fv("spot_cutoffs", &spot_cutoffs[0], count);
+            }
 
-        shader_active->setUniform3f("color_ambient", toVec3f(material.getAmbientColor()));
-        shader_active->setUniform3f("color_diffuse", toVec3f(material.getDiffuseColor()));
-        shader_active->setUniform3f("color_specular", toVec3f(material.getSpecularColor()));
-        shader_active->setUniform1f("brightness", material.getShininess());
+            shader_active->setUniformTexture("tex0", img.getTexture(), 0);
 
-        shader_active->setUniformTexture("tex", img.getTexture(), 0);
-
-        // ENVOIE DES LUMI�RES � NOUVEAU
-        for (int i = 0; i < light_positions.size(); ++i) {
-            shader_active->setUniform3f("light_positions[" + ofToString(i) + "]", light_positions[i]);
-            shader_active->setUniform3f("light_colors[" + ofToString(i) + "]", light_colors[i]);
-        }
-        shader_active->setUniform1i("num_lights", light_positions.size());
-
-            img.getTexture().bind();
             box.drawFaces();
-            img.getTexture().unbind();
 
             shader_active->end();
         }
@@ -304,7 +348,10 @@ void Geometrie::draw_cube(ofMaterial material, ofImage img, ElementScene3DFiltre
     }
 
     ofDisableDepthTest();
+    light_positions.clear();
+    light_colors.clear();
 }
+
 
 
 
@@ -472,28 +519,12 @@ void Geometrie::send_common_matrices(ofShader* shader)
 {
     ofMatrix4x4 modelViewMatrix = ofGetCurrentMatrix(OF_MATRIX_MODELVIEW);
     ofMatrix4x4 projectionMatrix = ofGetCurrentMatrix(OF_MATRIX_PROJECTION);
+
     glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(modelViewMatrix)));
 
     shader->setUniformMatrix4f("modelViewMatrix", modelViewMatrix);
     shader->setUniformMatrix4f("projectionMatrix", projectionMatrix);
     shader->setUniformMatrix3f("normalMatrix", normalMatrix);
-}
-
-void Geometrie::send_light_to_shader(ofShader* shader, int i, const ElementScene3D& elem, const ofMatrix4x4& modelViewMatrix)
-{
-    const LightAttribute& l = elem.lightAttribute;
-
-    int type = static_cast<int>(elem.type);
-    ofVec3f color = l.diffuseColor / 255.0f;
-    ofVec3f pos_view = l.light.getGlobalPosition() * modelViewMatrix;
-    ofVec3f dir_view = l.orientation * modelViewMatrix.getRotate();
-    float cutoff = cos(ofDegToRad(l.lightCutOff));
-
-    shader->setUniform1i("lights[" + ofToString(i) + "].type", type);
-    shader->setUniform3f("lights[" + ofToString(i) + "].color", color);
-    shader->setUniform3f("lights[" + ofToString(i) + "].position", pos_view);
-    shader->setUniform3f("lights[" + ofToString(i) + "].direction", dir_view);
-    shader->setUniform1f("lights[" + ofToString(i) + "].cutoff", cutoff);
 }
 
 ofShader* Geometrie::get_filter_shader(ElementScene3DFiltre filtre) {

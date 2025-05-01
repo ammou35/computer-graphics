@@ -29,6 +29,8 @@ void Renderer::setup()
     camera.setFarClip(10000.f); // how far something can be before clipping
     camera.setPosition(0, 0, 600);     // set manually position
     camera.lookAt(ofVec3f(0, 0, 0)); // look at the origin
+    toneMapFbo.allocate(ofGetWidth(), ofGetHeight(), GL_RGBA);
+    toneMapShader.load("shaders/tonemap_vs.glsl", "shaders/tonemap_fs.glsl");
 }
 
 void Renderer::update(const GuiManager& guiManager) {
@@ -37,6 +39,7 @@ void Renderer::update(const GuiManager& guiManager) {
     graph.geometrie.shader_mode = guiManager.shader_mode;
     graph.bounding_box = guiManager.delimitation;
     sky_box = guiManager.sky_box;
+    exposure = guiManager.exposure;
     graph.dessinVectoriel.stroke_width_default = guiManager.lineWidth;
     set_bg_color(guiManager.get_vector_bg_color());
     ofSetBackgroundColor(bg_color);
@@ -49,23 +52,38 @@ void Renderer::update(const GuiManager& guiManager) {
 
 void Renderer::draw()
 {
+    toneMapFbo.begin();
+    ofClear(255, 255, 255, 255);
     camera.begin();
+
     if (sky_box) {
         graph.geometrie.skybox.draw(camera);
     }
-    if (graph.geometrie.shader_active != nullptr)
+
+    if (graph.geometrie.shader_active)
         graph.geometrie.shader_active->begin();
 
-    ofSetColor(255, 255, 255);
+    ofSetColor(255);
     for (const auto& i : image)
         i.draw(300, 24, 0);
 
     graph.draw(get_mouse_press(), get_mouse_current(), get_is_mouse_button_pressed());
     graph.dessinVectoriel.draw(get_mouse_press(), get_mouse_current(), get_is_mouse_button_pressed());
 
-    if (graph.geometrie.shader_active != nullptr)
+    if (graph.geometrie.shader_active)
         graph.geometrie.shader_active->end();
+
     camera.end();
+    toneMapFbo.end();
+
+    ofDisableDepthTest();
+    ofDisableDepthTest();
+
+    toneMapShader.begin();
+    toneMapShader.setUniformTexture("tex0", toneMapFbo.getTexture(), 0);
+    toneMapShader.setUniform1f("exposure", exposure);
+    drawFullscreenQuad();
+    toneMapShader.end();
 }
 
 void Renderer::imageExport(const string name, const string extension) const
@@ -196,4 +214,25 @@ ofVec3f Renderer::screenToViewPlane(int x, int y, const ofVec3f& plane_origin, c
         // Rayon parall�le au plan : retourner worldNear
         return worldNear;
     }
+}
+
+void Renderer::drawFullscreenQuad() {
+    static ofVboMesh quad;
+    if (quad.getNumVertices() == 0) {
+        quad.setMode(OF_PRIMITIVE_TRIANGLE_STRIP);
+
+        quad.addVertex(glm::vec3(-1, -1, 0));
+        quad.addTexCoord(glm::vec2(0, 0));
+
+        quad.addVertex(glm::vec3(1, -1, 0));
+        quad.addTexCoord(glm::vec2(1, 0));
+
+        quad.addVertex(glm::vec3(-1, 1, 0));
+        quad.addTexCoord(glm::vec2(0, 1));
+
+        quad.addVertex(glm::vec3(1, 1, 0));
+        quad.addTexCoord(glm::vec2(1, 1));
+    }
+
+    quad.draw();
 }

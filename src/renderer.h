@@ -36,6 +36,7 @@ public:
 
     float speed;
     bool sky_box;
+    float exposure;
 
     void setup();
     void update(const GuiManager& guiManager);
@@ -68,6 +69,7 @@ public:
     void mouseReleased(void);
     void draw_font(void);
 
+    void drawFullscreenQuad();
     ofVec3f screenToScene(int x, int y);
     ofVec3f screenToViewPlane(int x, int y, const ofVec3f& plane_origin, const ofVec3f& plane_normal);
 
@@ -78,6 +80,9 @@ private:
     //Dessin vectoriel
     std::array<int, 2> mouse_press;
     std::array<int, 2> mouse_current;
+
+    ofFbo toneMapFbo;
+    ofShader toneMapShader;
 
     bool is_mouse_button_pressed_;
 };

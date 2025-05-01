@@ -1,69 +1,75 @@
-#version 330 core
+#version 330
 
-#define MAX_LIGHTS 8
+in vec3 surface_position;
+in vec3 surface_normal;
+in vec2 surface_texcoord;
 
-in vec3 frag_pos;
-in vec3 frag_normal;
-in vec2 frag_texcoord;
-
-out vec4 fragColor;
-
-uniform sampler2D tex;
-
-struct Light {
-    int type;           // 0: ambient, 1: directional, 2: point, 3: spot
-    vec3 position;
-    vec3 direction;
-    vec3 color;
-    float cutoff;       // for spot (cosine of angle)
-};
-
-uniform Light lights[MAX_LIGHTS];
-uniform int num_lights;
+out vec4 fragment_color;
 
 uniform vec3 color_ambient;
 uniform vec3 color_diffuse;
 uniform vec3 color_specular;
 uniform float brightness;
 
+uniform int num_lights;
+uniform vec3 light_positions[30];
+uniform vec3 light_colors[30];
+uniform vec3 light_directions[30]; // for spot and directional
+uniform int light_type[30];        // 0 = point, 1 = directional, 2 = spotlight
+uniform float spot_cutoffs[30];    // cos(angle) in radians for spotlight
+
+uniform sampler2D tex0;
+
 void main()
 {
-    vec3 norm = normalize(frag_normal);
-    vec3 view_dir = normalize(-frag_pos);
-    vec3 result = color_ambient;
+  vec3 n = normalize(surface_normal);
+  vec3 v = normalize(-surface_position);
+  vec3 tex_color = texture(tex0, surface_texcoord).rgb;
 
-    for (int i = 0; i < num_lights; ++i) {
-        if (lights[i].type == 0) {
-            result += lights[i].color * color_ambient;
-            continue;
-        }
+  vec3 result = color_ambient;
 
-        vec3 light_dir;
-        if (lights[i].type == 1) {
-            light_dir = normalize(-lights[i].direction); // Directionnelle
-        } else {
-            light_dir = normalize(lights[i].position - frag_pos); // Point ou spot
-        }
+  for (int i = 0; i < 30; ++i) {
+    if (i >= num_lights) break;
 
-        float diff = max(dot(norm, light_dir), 0.0);
-        float spec = 0.0;
-        if (diff > 0.0) {
-            vec3 halfway = normalize(light_dir + view_dir);
-            spec = pow(max(dot(norm, halfway), 0.0), brightness);
-        }
+    vec3 l;
+    float attenuation = 1.0;
+    bool skip = false;
 
-        float attenuation = 1.0;
-        if (lights[i].type == 3) {
-            float theta = dot(normalize(-lights[i].direction), normalize(frag_pos - lights[i].position));
-            if (theta < lights[i].cutoff) {
-                attenuation = 0.0;
-            }
-        }
+    if (light_type[i] == 0) {
+      // Point light
+      l = normalize(light_positions[i] - surface_position);
+    }
+    else if (light_type[i] == 1) {
+      // Directional light (direction already in view space)
+      l = normalize(-light_directions[i]); // from light to surface
+    }
+    else if (light_type[i] == 2) {
+      // Spotlight
+      vec3 light_to_frag = surface_position - light_positions[i];
+      float distance = length(light_to_frag);
+      l = normalize(-light_to_frag);
 
-        vec3 light_contrib = attenuation * lights[i].color * (diff * color_diffuse + spec * color_specular);
-        result += light_contrib;
+      float spot_cos = dot(l, normalize(-light_directions[i]));
+      if (spot_cos < spot_cutoffs[i]) {
+    	skip = true; // outside cone
+      } else {
+    	float spot_fade = (spot_cos - spot_cutoffs[i]) / (1.0 - spot_cutoffs[i]);
+    	attenuation = pow(spot_fade, 4.0); // soft falloff
+      }
     }
 
-    vec4 tex_color = texture(tex, frag_texcoord);
-    fragColor = vec4(result, 1.0) * tex_color;
+    if (!skip) {
+      vec3 h = normalize(v + l);
+      float diff = max(dot(n, l), 0.0);
+      float spec = pow(max(dot(n, h), 0.001), brightness);
+
+      vec3 diffuse = diff * color_diffuse * light_colors[i] * attenuation;
+      vec3 specular = spec * color_specular * light_colors[i] * attenuation;
+
+      result += diffuse + specular;
+    }
+  }
+
+  vec3 final_color = tex_color * result;
+  fragment_color = vec4(final_color, 1.0);
 }

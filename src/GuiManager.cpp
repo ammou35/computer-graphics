@@ -29,6 +29,7 @@ void GuiManager::setup() {
     shader_mode = -1;
     element3D_texture = -1;
     element3D_filtre = -1;
+    exposure = 1.0f;
 }
 
 void GuiManager::update(Graph& graph) {
@@ -345,11 +346,16 @@ void GuiManager::draw(ElementScene2D* element2D, ElementScene3D* element3D, cons
                 if (ImGui::RadioButton("Pbr", shader_mode == 5)) {
                     shader_mode = 5;
                 }
+                if (ImGui::RadioButton("Flat shading", shader_mode == 6)) {
+                    shader_mode = 6;
+                }
                 ImGui::EndTabItem();
             }
         }
         ImGui::EndTabBar();
         if (ImGui::Checkbox("Skybox", &sky_box)) {}
+        ImGui::Text("Exposition :");
+        ImGui::SliderFloat("##Exposure", &exposure, 0.0f, 5.0f, "%.01f");
         if (ImGui::Checkbox("Delimitation box", &delimitation)) {}
         if (ImGui::BeginTabBar("Tabs2")) {
             if (ImGui::BeginTabItem("Primitives")) {
@@ -591,7 +597,7 @@ void GuiManager::draw(ElementScene2D* element2D, ElementScene3D* element3D, cons
 
                             // Show editable position vector
                             ImGui::InputFloat3("Position", element3D[i].lightAttribute.position.getPtr(), "%.1f");
-                            element3D[i].lightAttribute.light.setPosition(element3D[i].lightAttribute.position);
+                            element3D[i].lightAttribute.light.setGlobalPosition(element3D[i].lightAttribute.position);
 
                             // Optionally also allow rotation or direction
                             if (element3D[i].type == ElementScene3DType::directional_light ||

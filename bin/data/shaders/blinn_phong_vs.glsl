@@ -1,23 +1,23 @@
-#version 330 core
+#version 330
 
-layout(location = 0) in vec3 position;
-layout(location = 1) in vec3 normal;
-layout(location = 2) in vec2 texcoord;
+in vec4 position;
+in vec4 normal;
+in vec2 texcoord;
 
-uniform mat4 modelViewMatrix;
-uniform mat4 projectionMatrix;
-uniform mat3 normalMatrix;
+out vec3 surface_position;
+out vec3 surface_normal;
+out vec2 surface_texcoord;
 
-out vec3 frag_pos;
-out vec3 frag_normal;
-out vec2 frag_texcoord;
+uniform mat4x4 modelViewMatrix;
+uniform mat4x4 projectionMatrix;
 
 void main()
 {
-    vec4 view_pos = modelViewMatrix * vec4(position, 1.0);
-    frag_pos = view_pos.xyz;
-    frag_normal = normalize(normalMatrix * normal);
-    frag_texcoord = texcoord;
+  mat4x4 normalMatrix = transpose(inverse(modelViewMatrix));
 
-    gl_Position = projectionMatrix * view_pos;
+  surface_normal = vec3(normalMatrix * normal);
+  surface_position = vec3(modelViewMatrix * position);
+  surface_texcoord = texcoord;
+
+  gl_Position = projectionMatrix * modelViewMatrix * position;
 }
