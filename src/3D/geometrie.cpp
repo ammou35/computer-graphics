@@ -124,6 +124,12 @@ void Geometrie::setup()
 	texture_Honeycomb.load("textures/honeycomb.png");
 	texture_Sponge.load("textures/sponge.jpg");
 
+    normal_Wood.load("textures/wood_nm.png");
+    normal_Sand.load("textures/sand_nm.png");
+    normal_Briks.load("textures/brick_nm.png");
+    normal_Honeycomb.load("textures/honeycomb_nm.png");
+    normal_Sponge.load("textures/sponge_nm.png");
+
     int width = 256;
     int height = 256;
     int tileSize = 32;
@@ -255,7 +261,7 @@ void Geometrie::draw_bounding_box() const {
 
 void Geometrie::draw_cube(ofMaterial material, ofImage img, ElementScene3DFiltre filtre, ElementScene3D* element3D) {
 
-    ofMatrix4x4 modelViewMatrix = ofGetCurrentMatrix(OF_MATRIX_MODELVIEW); // AJOUT�
+    ofMatrix4x4 modelViewMatrix = ofGetCurrentMatrix(OF_MATRIX_MODELVIEW);
     ofEnableDepthTest();
     ofBoxPrimitive box;
     box.set(200);
@@ -300,8 +306,13 @@ void Geometrie::draw_cube(ofMaterial material, ofImage img, ElementScene3DFiltre
                     ofVec3f world_pos = e.lightAttribute.light.getGlobalPosition();
                     ofVec3f view_pos = world_pos * modelViewMatrix;
                     glm::vec3 dir = glm::vec3(e.lightAttribute.orientation);
-                    glm::vec3 view_dir = glm::mat3(modelViewMatrix) * dir;
-                    light_directions.push_back(ofVec3f(view_dir)); // convert back if needed
+                    if (e.type == ElementScene3DType::directional_light) {
+                        light_directions.push_back(ofVec3f(dir)); // ne pas transformer
+                    }
+                    else {
+                        glm::vec3 view_dir = glm::mat3(modelViewMatrix) * dir;
+                        light_directions.push_back(ofVec3f(view_dir)); // transforme pour spot et point
+                    }
 
                     light_positions.push_back(view_pos);
                     light_colors.push_back(e.lightAttribute.diffuseColor / 255.0f); // normalize
@@ -343,6 +354,13 @@ void Geometrie::draw_cube(ofMaterial material, ofImage img, ElementScene3DFiltre
             }
 
             shader_active->setUniformTexture("tex0", img.getTexture(), 0);
+            if (element3D->normal_mapping) {
+                shader_active->setUniformTexture("normalMap", getRelief(img), 1);
+				shader_active->setUniform1i("useNormalMap", 1);
+			}
+			else {
+				shader_active->setUniform1i("useNormalMap", 0);
+            }
 
             box.drawFaces();
 
@@ -361,9 +379,6 @@ void Geometrie::draw_cube(ofMaterial material, ofImage img, ElementScene3DFiltre
     light_positions.clear();
     light_colors.clear();
 }
-
-
-
 
 
 
@@ -573,4 +588,19 @@ ofShader* Geometrie::get_filter_shader(ElementScene3DFiltre filtre) {
     default:
         return &filtre_None;
     }
+}
+
+ofTexture Geometrie::getRelief(ofImage& img) const {
+    if (&img == &texture_Wood)
+        return normal_Wood.getTexture();
+    else if (&img == &texture_Sand)
+        return normal_Sand.getTexture();
+    else if (&img == &texture_Briks)
+        return normal_Briks.getTexture();
+    else if (&img == &texture_Honeycomb)
+        return normal_Honeycomb.getTexture();
+    else if (&img == &texture_Sponge)
+        return normal_Sponge.getTexture();
+    else
+        return texture_None.getTexture();
 }
