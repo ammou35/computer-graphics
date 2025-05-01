@@ -280,6 +280,7 @@ void Geometrie::draw_cube(ofMaterial material, ofImage img, ElementScene3DFiltre
             std::vector<ofVec3f> light_directions;
             std::vector<int> light_types;
             std::vector<float> spot_cutoffs;
+            ofVec3f ambient_sum(0, 0, 0);
 
             ofMatrix4x4 modelViewMatrix = ofGetCurrentMatrix(OF_MATRIX_MODELVIEW);
 
@@ -305,22 +306,24 @@ void Geometrie::draw_cube(ofMaterial material, ofImage img, ElementScene3DFiltre
                     else if (e.type == ElementScene3DType::directional_light) {
                         light_types.push_back(1);
                         spot_cutoffs.push_back(0.0f);
-                        ofLogNotice() << "Directional dir = " << e.lightAttribute.orientation;
                     }
                     else if (e.type == ElementScene3DType::spot_light) {
                         light_types.push_back(2);
                         spot_cutoffs.push_back(cos(ofDegToRad(e.lightAttribute.lightCutOff)));
                     }
+                } else if (e.type == ElementScene3DType::ambiant) {
+                    ambient_sum += e.lightAttribute.diffuseColor / 255.0f;
                 }
             }
 
             shader_active->begin();
             
             send_common_matrices(shader_active);
-            shader_active->setUniform3f("color_ambient", toVec3f(material.getAmbientColor()));
+            shader_active->setUniform3f("mat_ambient", toVec3f(material.getAmbientColor()));
             shader_active->setUniform3f("color_diffuse", toVec3f(material.getDiffuseColor()));
             shader_active->setUniform3f("color_specular", toVec3f(material.getSpecularColor()));
             shader_active->setUniform1f("brightness", 50.0f);
+            shader_active->setUniform3f("light_ambient", ambient_sum);
 
             int count = std::min((int)light_positions.size(), 30);
             shader_active->setUniform1i("num_lights", count);

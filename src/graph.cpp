@@ -424,7 +424,7 @@ void Graph::add_element3D(const std::array<int, 2>& mouse_press, const std::arra
 		element3D[index].lightAttribute.light.lookAt(element3D[index].lightAttribute.orientation);
 		element3D[index].lightAttribute.light.setSpotConcentration(element3D[index].lightAttribute.concentration);
 		element3D[index].lightAttribute.light.setSpotlightCutOff(element3D[index].lightAttribute.lightCutOff);
-		
+		element3D[index].lightAttribute.orientation = element3D[index].lightAttribute.light.getLookAtDir();
 		element3D[index].lightAttribute.light.setSpotlight();
 	}
 	else if (get_draw_shape_3D() == ElementScene3DType::point_light) {
