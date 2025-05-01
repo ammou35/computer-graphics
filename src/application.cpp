@@ -78,6 +78,12 @@ void Application::update()
         renderer.set_mouse_current_y(mouseY);
     }
 
+    if (renderer.graph.geometrie.shader_name == "PBR") {
+        guiManager.pbr_mode = true;
+    }
+    else {
+        guiManager.pbr_mode = false;
+    }
 
     renderer.update(guiManager);
     guiManager.update(renderer.graph);

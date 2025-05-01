@@ -35,6 +35,8 @@ struct ElementScene3D {
 	ElementScene3DTexture texture;
 	ElementScene3DFiltre filtre;
 	LightAttribute lightAttribute;
+	float metallic;
+	float roughness;
 };
 
 class Geometrie
@@ -123,7 +125,7 @@ public:
 	void update(ElementScene3D* element3D);
 	void draw();
 
-	void draw_cube(ofMaterial material, ofImage img, ElementScene3DFiltre filtre, ElementScene3D* element3D);   // Fonction pour ajouter un cube
+	void draw_cube(ofMaterial material, ofImage img, ElementScene3DFiltre filtre, ElementScene3D* element3D, ElementScene3D current_element3D);   // Fonction pour ajouter un cube
 	void draw_sphere(ofMaterial material, ofImage img); // Fonction pour ajouter une sph�re
 	void draw_cylinder() const; // Fonction pour ajouter un cylindre
 	void draw_cone() const; // Fonction pour ajouter un c�ne

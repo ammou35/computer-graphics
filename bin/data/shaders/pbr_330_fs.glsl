@@ -22,13 +22,13 @@ uniform vec3 light_positions[MAX_LIGHTS];
 uniform vec3 light_colors[MAX_LIGHTS];
 uniform vec3 light_directions[MAX_LIGHTS];
 uniform int light_type[MAX_LIGHTS];  // 0: point, 1: dir, 2: spot
-uniform float spot_cutoffs[MAX_LIGHTS]; // cos(angle)
+uniform float spot_cutoffs[MAX_LIGHTS]; // cos(theta)
 uniform int num_lights;
 uniform vec3 light_ambient;
 
 out vec4 fragColor;
 
-// --- PBR ---
+// PBR utils
 vec3 fresnelSchlick(float cosTheta, vec3 F0) {
     return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
 }
@@ -52,7 +52,7 @@ float geometrySmith(vec3 N, vec3 V, vec3 L, float roughness) {
 void main() {
     vec3 albedo = texture(tex0, frag_texcoord).rgb * color_diffuse;
     vec3 N = normalize(frag_normal);
-    vec3 V = normalize(-frag_pos); // caméra = (0,0,0) en view space
+    vec3 V = normalize(-frag_pos);
 
     if (useNormalMap == 1) {
         vec3 normalTex = texture(normalMap, frag_texcoord).rgb;
@@ -71,26 +71,21 @@ void main() {
             // Directional light
             L = normalize(-light_directions[i]);
         } else {
-            // Spot or point light
-vec3 light_vec = light_positions[i] - frag_pos;
-float dist = length(light_vec);
-L = normalize(light_vec);
+            // Point or spot light
+            vec3 light_vec = light_positions[i] - frag_pos;
+            float dist = length(light_vec);
+            L = normalize(light_vec);
 
-// Nouvelle atténuation super douce
-float linear = 0.001;
-float quadratic = 0.0001;
-attenuation = 1.0 / (1.0 + linear * dist + quadratic * dist * dist);
-
-
-            // Spot light cutoff
+            // ⛔ SPOT CUT OFF (Blinn-Phong style)
             if (light_type[i] == 2) {
-                vec3 lightDir = normalize(-light_directions[i]); // direction d’émission
-                vec3 toFrag = normalize(frag_pos - light_positions[i]); // vecteur vers le point
-                float spot = dot(lightDir, toFrag);
-                if (spot < spot_cutoffs[i]) {
-                    attenuation = 0.0;
-                }
+                float spotEffect = dot(-light_directions[i], normalize(light_vec));
+                if (spotEffect < spot_cutoffs[i]) continue; // trop loin du cône
             }
+
+            // Atténuation douce
+            float linear = 0.001;
+            float quadratic = 0.0001;
+            attenuation = 1.0 / (1.0 + linear * dist + quadratic * dist * dist);
         }
 
         vec3 H = normalize(V + L);
@@ -111,7 +106,6 @@ attenuation = 1.0 / (1.0 + linear * dist + quadratic * dist * dist);
 
     vec3 ambient = light_ambient * albedo;
     vec3 color = ambient + Lo;
-
-    color = pow(color, vec3(1.0 / 2.2)); // gamma correction
+    color = pow(color, vec3(1.0 / 2.2));
     fragColor = vec4(color, 1.0);
 }

@@ -42,6 +42,7 @@ public:
     int item_selected3D_with_material = 0;
     bool transformationBufferIsInitialized = false;
     bool use_tessellation_gpu = false;
+    bool pbr_mode = false;
     float exposure;
 private:
     ofxImGui::Gui gui;

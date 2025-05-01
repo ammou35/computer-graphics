@@ -720,6 +720,39 @@ void GuiManager::draw(ElementScene2D* element2D, ElementScene3D* element3D, cons
                     }
                     ImGui::PopItemWidth();
                 }
+
+                if (pbr_mode) {
+                    if (ImGui::CollapsingHeader("Pbr")) {
+                        ImGui::PushItemWidth(125.0f);
+
+                        int selectedWithMaterial = -1;
+                        int countSelected = 0;
+                        for (int i = 0; i < 30; ++i) {
+                            if (element3D[i].is_selected &&
+                                (element3D[i].type == ElementScene3DType::cube ||
+                                    element3D[i].type == ElementScene3DType::sphere ||
+                                    element3D[i].type == ElementScene3DType::cylinder ||
+                                    element3D[i].type == ElementScene3DType::cone)) {
+                                selectedWithMaterial = i;
+                                ++countSelected;
+                            }
+                        }
+
+                        if (countSelected == 1) {
+                            ImGui::PushID(selectedWithMaterial + 1000);
+
+                            // Metallic
+                            ImGui::SliderFloat("Metallic", &element3D[selectedWithMaterial].metallic, 0.0f, 1.0f, "%.2f");
+
+                            // Roughness
+                            ImGui::SliderFloat("Roughness", &element3D[selectedWithMaterial].roughness, 0.0f, 1.0f, "%.2f");
+
+                            ImGui::PopID();
+                        }
+
+                        ImGui::PopItemWidth();
+                    }
+                }
             }
             ImGui::TreePop(); // End of Section 1
         }

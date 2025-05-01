@@ -247,7 +247,7 @@ void Graph::draw(const std::array<int, 2>& mouse_press, const std::array<int, 2>
 			case ElementScene3DType::none:
 				break;
 			case ElementScene3DType::cube:
-				geometrie.draw_cube(material, texture, element3D[i].filtre, element3D);
+				geometrie.draw_cube(material, texture, element3D[i].filtre, element3D, element3D[i]);
 				break;
 			case ElementScene3DType::sphere:
 				geometrie.draw_sphere(material, texture);
@@ -410,6 +410,9 @@ void Graph::add_element3D(const std::array<int, 2>& mouse_press, const std::arra
 	element3D[index].is_selected = false;
 	element3D[index].material = ElementScene3DMaterial::none;
 	element3D[index].normal_mapping = false;
+	element3D[index].roughness = 0.3f;
+	element3D[index].metallic = 0.1f;
+
 
 	if (get_draw_shape_3D() == ElementScene3DType::spot_light) {
 		element3D[index].lightAttribute.diffuseColor = ofVec3f(191, 191, 191);

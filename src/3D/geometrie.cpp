@@ -275,7 +275,7 @@ void Geometrie::draw_bounding_box() const {
     ofDrawBox(0, 0, 0, 100);
 }
 
-void Geometrie::draw_cube(ofMaterial material, ofImage img, ElementScene3DFiltre filtre, ElementScene3D* element3D) {
+void Geometrie::draw_cube(ofMaterial material, ofImage img, ElementScene3DFiltre filtre, ElementScene3D* element3D, ElementScene3D current_element3D) {
 
     ofMatrix4x4 modelViewMatrix = ofGetCurrentMatrix(OF_MATRIX_MODELVIEW);
     ofEnableDepthTest();
@@ -354,6 +354,8 @@ void Geometrie::draw_cube(ofMaterial material, ofImage img, ElementScene3DFiltre
             shader_active->setUniform3f("color_specular", toVec3f(material.getSpecularColor()));
             shader_active->setUniform1f("brightness", 50.0f);
             shader_active->setUniform3f("light_ambient", ambient_sum);
+            shader_active->setUniform1f("material_roughness", current_element3D.roughness);
+            shader_active->setUniform1f("material_metallic", current_element3D.metallic);
 
             int count = std::min((int)light_positions.size(), 30);
             shader_active->setUniform1i("num_lights", count);
@@ -366,7 +368,7 @@ void Geometrie::draw_cube(ofMaterial material, ofImage img, ElementScene3DFiltre
             }
 
             shader_active->setUniformTexture("tex0", img.getTexture(), 0);
-            if (element3D->normal_mapping) {
+            if (current_element3D.normal_mapping) {
                 shader_active->setUniformTexture("normalMap", getRelief(img), 1);
 				shader_active->setUniform1i("useNormalMap", 1);
 			}
