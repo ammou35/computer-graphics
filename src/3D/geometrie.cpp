@@ -69,6 +69,13 @@ void Geometrie::setup()
     shader_active = &blinn_phong_shader;
     shader_mode = -1;
 
+    tessellation_shader.setupShaderFromFile(GL_VERTEX_SHADER, "shaders/tessellation/bezier.vert");
+    tessellation_shader.setupShaderFromFile(GL_FRAGMENT_SHADER, "shaders/tessellation/bezier.frag");
+    tessellation_shader.setupShaderFromFile(GL_TESS_CONTROL_SHADER, "shaders/tessellation/bezier_tcs.glsl");
+    tessellation_shader.setupShaderFromFile(GL_TESS_EVALUATION_SHADER, "shaders/tessellation/bezier_tes.glsl");
+    tessellation_shader.linkProgram();
+    setup_tessellation_surface();
+
     // Volcanic Magma - Bright, hot, glowing
     material_VolcanicRock.setAmbientColor(ofColor(80, 10, 0));
     material_VolcanicRock.setDiffuseColor(ofColor(255, 60, 10));
@@ -435,14 +442,39 @@ void Geometrie::draw_spaghetti_getter()
 }
 
 void Geometrie::draw_bezier_curve() {
-    ofSetColor(39, 107, 5);
-    mesh.drawWireframe();
-    update_mesh();
-    // Dessiner les points de contr�le
-    ofSetColor(255, 0, 0);
+    if (use_tessellation_gpu)
+        draw_bezier_surface_gpu();
+    else {
+        ofSetColor(39, 107, 5);
+        mesh.drawWireframe();
+        update_mesh();
+        // Dessiner les points de contr�le
+        ofSetColor(255, 0, 0);
+        for (int i = 0; i < 4; ++i)
+            for (int j = 0; j < 4; ++j)
+                ofDrawEllipse(control_grid[i][j], radius, radius);
+    }
+}
+
+void Geometrie::setup_tessellation_surface() {
+    tessellation_patch.clear();
+    tessellation_patch.setMode(OF_PRIMITIVE_PATCHES);
+
     for (int i = 0; i < 4; ++i)
         for (int j = 0; j < 4; ++j)
-            ofDrawEllipse(control_grid[i][j], radius, radius);
+            tessellation_patch.addVertex(control_grid[i][j]); // 16 sommets
+
+    glPatchParameteri(GL_PATCH_VERTICES, 16);
+}
+
+void Geometrie::draw_bezier_surface_gpu() {
+    glPatchParameteri(GL_PATCH_VERTICES, 16);
+    tessellation_shader.begin();
+    send_common_matrices(&tessellation_shader); // si tu veux projeter
+    ofLogNotice() << "tessellation_patch has " << tessellation_patch.getNumVertices() << " vertices.";
+    ofLogNotice() << "Mesh mode: " << tessellation_patch.getMode();
+    tessellation_patch.draw(); // contient 16 sommets = 1 patch
+    tessellation_shader.end();
 }
 
 void Geometrie::set_projection_mode(bool mode) {

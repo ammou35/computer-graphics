@@ -397,6 +397,7 @@ void GuiManager::draw(ElementScene2D* element2D, ElementScene3D* element3D, cons
 
                 }
                 ImGui::EndTabItem();
+                ImGui::Checkbox("Tessellation GPU", &use_tessellation_gpu);
                 ImGui::Text("Adjust tesselation x:");
                 ImGui::SliderFloat("##tesselation1", &tesselation.x, 1.0f, 100.0f, "%.1f");
                 ImGui::Text("Adjust tesselation y:");

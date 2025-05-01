@@ -38,6 +38,7 @@ void Renderer::update(const GuiManager& guiManager) {
     graph.geometrie.set_projection_mode(guiManager.projection);
     graph.geometrie.shader_mode = guiManager.shader_mode;
     graph.bounding_box = guiManager.delimitation;
+    graph.geometrie.use_tessellation_gpu = guiManager.use_tessellation_gpu;
     sky_box = guiManager.sky_box;
     exposure = guiManager.exposure;
     graph.dessinVectoriel.stroke_width_default = guiManager.lineWidth;

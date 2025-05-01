@@ -91,6 +91,10 @@ public:
 	int resolution_v = 20;
 	ofMesh mesh;
 
+	bool use_tessellation_gpu = false;
+	ofShader tessellation_shader;
+	ofVboMesh tessellation_patch;
+
 	bool is_dragging;
 	int selected_i;
 	int selected_j;
@@ -120,6 +124,9 @@ public:
 	void draw_plate(); // Fonction pour ajouter une assiette
 	void draw_spaghetti_getter(); // Fonction pour ajouter
 	void draw_bezier_curve();
+	void setup_tessellation_surface();
+	void draw_bezier_surface_cpu();
+	void draw_bezier_surface_gpu();
 	void draw_skybox();
 
 	ofShader* get_filter_shader(ElementScene3DFiltre filtre);
