@@ -1,32 +1,32 @@
-// IFT3100H24 ~ lambert_330_fs.glsl
-
 #version 330
 
-// attributs interpolés à partir des valeurs en sortie du shader de sommets
 in vec3 surface_position;
 in vec3 surface_normal;
+in vec2 surface_texcoord;
 
-// attribut en sortie
 out vec4 fragment_color;
 
-// couleurs de réflexion du matériau
-uniform vec3 color_ambient;
+uniform vec3 mat_ambient;
 uniform vec3 color_diffuse;
+uniform vec3 light_ambient;
 
-// position d'une source de lumière
-uniform vec3 light_position;
+uniform int num_lights;
+uniform vec3 light_positions[30];
+uniform vec3 light_colors[30];
 
-void main()
-{
-  // re-normaliser la normale après interpolation (n)
-  vec3 n = normalize(surface_normal);
+uniform sampler2D tex0;
 
-  // calculer la direction de la surface vers la lumière (l)
-  vec3 l = normalize(light_position - surface_position);
+void main() {
+    vec3 n = normalize(surface_normal);
+    vec3 tex_color = texture(tex0, surface_texcoord).rgb;
 
-  // calculer le niveau de réflexion diffuse (n • l)
-  float reflection_diffuse = max(dot(n, l), 0.0);
+    vec3 result = light_ambient * mat_ambient;
 
-  // déterminer la couleur du fragment
-  fragment_color = vec4(color_ambient + color_diffuse * reflection_diffuse, 1.0);
+    for (int i = 0; i < num_lights; ++i) {
+        vec3 l = normalize(light_positions[i] - surface_position);
+        float diff = max(dot(n, l), 0.0);
+        result += diff * color_diffuse * light_colors[i];
+    }
+
+    fragment_color = vec4(tex_color * result, 1.0);
 }

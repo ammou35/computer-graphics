@@ -1,15 +1,13 @@
-// IFT3100H24 ~ gouraud_330_fs.glsl
-
 #version 330
 
-// attribut interpolé à partir des valeurs en sortie du shader de sommet
-in vec3 surface_color;
+in vec3 vertex_color;
+in vec2 surface_texcoord;
 
-// attribut en sortie
 out vec4 fragment_color;
 
-void main()
-{
-  // calculer la couleur du fragment
-  fragment_color = vec4(surface_color, 1.0);
+uniform sampler2D tex0;
+
+void main() {
+    vec3 tex_color = texture(tex0, surface_texcoord).rgb;
+    fragment_color = vec4(tex_color * vertex_color, 1.0);
 }
