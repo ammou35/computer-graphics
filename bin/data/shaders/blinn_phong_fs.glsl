@@ -6,39 +6,29 @@ in vec2 surface_texcoord;
 
 out vec4 fragment_color;
 
-uniform vec3 mat_ambient;
+uniform vec3 mat_ambient;     // material's ambient reflectivity
 uniform vec3 color_diffuse;
 uniform vec3 color_specular;
 uniform float brightness;
 
-uniform vec3 light_ambient;
+uniform vec3 light_ambient;   // combined ambient light color
 
 uniform int num_lights;
 uniform vec3 light_positions[30];
 uniform vec3 light_colors[30];
 uniform vec3 light_directions[30];
-uniform int light_type[30];
-uniform float spot_cutoffs[30];
+uniform int light_type[30];        // 0 = point, 1 = directional, 2 = spotlight
+uniform float spot_cutoffs[30];    // cos(angle in radians) for spotlights
 
 uniform sampler2D tex0;
-uniform sampler2D normalMap;  // nouveau
-uniform int useNormalMap;     // nouveau
 
 void main()
 {
+  vec3 n = normalize(surface_normal);
+  vec3 v = normalize(-surface_position);
   vec3 tex_color = texture(tex0, surface_texcoord).rgb;
 
-  vec3 n;
-  if (useNormalMap == 1) {
-    vec3 sampledNormal = texture(normalMap, surface_texcoord).rgb;
-    sampledNormal = normalize(sampledNormal * 2.0 - 1.0);
-    n = sampledNormal;
-  } else {
-    n = normalize(surface_normal);
-  }
-
-  vec3 v = normalize(-surface_position);
-
+  // Ambient term (material * scene)
   vec3 result = light_ambient * mat_ambient;
 
   for (int i = 0; i < 30; ++i) {
@@ -49,12 +39,15 @@ void main()
     bool skip = false;
 
     if (light_type[i] == 0) {
+      // Point light
       l = normalize(light_positions[i] - surface_position);
     }
     else if (light_type[i] == 1) {
+      // Directional light
       l = normalize(-light_directions[i]);
     }
     else if (light_type[i] == 2) {
+      // Spotlight
       vec3 light_to_frag = surface_position - light_positions[i];
       float distance = length(light_to_frag);
       l = normalize(-light_to_frag);

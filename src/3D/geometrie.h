@@ -77,6 +77,7 @@ public:
 	ofShader lambert_shader;
 	ofShader gouraud_shader;
 	ofShader flat_shader;
+	ofShader pbr_shader;
 
 	ofFbo objectFbo;
 

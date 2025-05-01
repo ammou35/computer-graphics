@@ -63,7 +63,7 @@ void Geometrie::setup()
     phong_shader.load("shaders/phong_vs.glsl", "shaders/phong_fs.glsl");
     blinn_phong_shader.load("shaders/blinn_phong_vs.glsl", "shaders/blinn_phong_fs.glsl");
     flat_shader.load("shaders/flat_vs.glsl", "shaders/flat_fs.glsl");
-    ofLogNotice() << "Blinn-Phong loaded: " << blinn_phong_shader.isLoaded();
+    pbr_shader.load("shaders/pbr_330_vs.glsl", "shaders/pbr_330_fs.glsl");
 
     // Default shader active
     shader_active = &blinn_phong_shader;
@@ -205,22 +205,38 @@ void Geometrie::update(ElementScene3D* element3D)
         shader_active->setUniform3f("color_diffuse", 0.0f, 0.6f, 0.6f);
         shader_active->setUniform3f("color_specular", 1.0f, 1.0f, 0.0f);
         shader_active->setUniform1f("brightness", 10.0f);
-        //shader_active->setUniform1i("num_lights", light_positions.size());
 
         shader_active->end();
         break;
 
     case 5:
+        shader_active = &pbr_shader;
+        shader_name = "PBR";
+
+        shader_active->begin();
+        send_common_matrices(shader_active);
+
+        shader_active->setUniform3f("color_ambient", 0.1f, 0.1f, 0.1f);
+        shader_active->setUniform3f("color_diffuse", 0.0f, 0.6f, 0.6f);
+        shader_active->setUniform3f("color_specular", 1.0f, 1.0f, 0.0f);
+        shader_active->setUniform1f("brightness", 10.0f);
+
+        shader_active->setUniform1f("material_roughness", 0.3f); // Valeur test ; tu peux ajuster via GUI
+        shader_active->setUniform1f("material_metallic", 0.1f);
+
+        // Gestion des lumières comme dans draw_cube (préparation des vecteurs)
+        // Tu n'as pas besoin de les re-calculer ici si tu les calcules dans draw_cube()
+
+        shader_active->end();
         break;
 
     case 6:
 
         shader_active = &flat_shader;
-        shader_name = "Blinn-Phong";
+        shader_name = "Flat_shader";
         shader_active->begin();
         shader_active->setUniformMatrix4f("modelViewMatrix", ofGetCurrentMatrix(OF_MATRIX_MODELVIEW));
         shader_active->setUniformMatrix4f("projectionMatrix", ofGetCurrentMatrix(OF_MATRIX_PROJECTION));
-
         
         shader_active->setUniformMatrix3f("normalMatrix", normalMatrix);
 
@@ -306,13 +322,9 @@ void Geometrie::draw_cube(ofMaterial material, ofImage img, ElementScene3DFiltre
                     ofVec3f world_pos = e.lightAttribute.light.getGlobalPosition();
                     ofVec3f view_pos = world_pos * modelViewMatrix;
                     glm::vec3 dir = glm::vec3(e.lightAttribute.orientation);
-                    if (e.type == ElementScene3DType::directional_light) {
-                        light_directions.push_back(ofVec3f(dir)); // ne pas transformer
-                    }
-                    else {
-                        glm::vec3 view_dir = glm::mat3(modelViewMatrix) * dir;
-                        light_directions.push_back(ofVec3f(view_dir)); // transforme pour spot et point
-                    }
+
+                    glm::vec3 view_dir = glm::mat3(modelViewMatrix) * dir;
+                    light_directions.push_back(ofVec3f(view_dir)); // transforme pour spot et point
 
                     light_positions.push_back(view_pos);
                     light_colors.push_back(e.lightAttribute.diffuseColor / 255.0f); // normalize
