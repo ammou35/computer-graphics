@@ -452,7 +452,7 @@ void Graph::add_element3D(const std::array<int, 2>& mouse_press, const std::arra
 		element3D[index].lightAttribute.light.setSpecularColor(ofColor(element3D[index].lightAttribute.specularColor.x, element3D[index].lightAttribute.specularColor.y, element3D[index].lightAttribute.specularColor.z));
 		element3D[index].lightAttribute.light.setPosition(mouse_press[0], mouse_press[1], 0);
 		element3D[index].lightAttribute.light.lookAt(element3D[index].lightAttribute.orientation);
-		element3D[index].lightAttribute.orientation = element3D[index].lightAttribute.light.getLookAtDir(); // ← this is the key
+		element3D[index].lightAttribute.orientation = element3D[index].lightAttribute.light.getLookAtDir();
 		element3D[index].lightAttribute.light.setDirectional();
 	}
 	else if (get_draw_shape_3D() == ElementScene3DType::ambiant) {
