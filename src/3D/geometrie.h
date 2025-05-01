@@ -134,6 +134,7 @@ public:
 	void setup_tessellation_surface();
 	void draw_bezier_surface_cpu();
 	void draw_bezier_surface_gpu();
+	void update_tessellation_patch();
 	void draw_skybox();
 
 	ofShader* get_filter_shader(ElementScene3DFiltre filtre);

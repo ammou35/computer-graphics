@@ -30,33 +30,33 @@ void Application::update()
     time_last = time_current;
 
     if (is_key_press_up)
-        renderer.camera.boom(+10);
+        renderer.camera.boom(-10);
         //renderer.offset_y += renderer.delta_y * time_elapsed;
     if (is_key_press_down)
-        renderer.camera.boom(-10);
+        renderer.camera.boom(+10);
         //renderer.offset_y -= renderer.delta_y * time_elapsed;
     if (is_key_press_left)
-        renderer.camera.truck(+10);
+        renderer.camera.truck(-10);
         //renderer.offset_x += renderer.delta_x * time_elapsed;
     if (is_key_press_right)
-        renderer.camera.truck(-10);
+        renderer.camera.truck(+10);
         //renderer.offset_x -= renderer.delta_x * time_elapsed;
     if (is_key_press_q)
         renderer.camera.dolly(+10);
     if (is_key_press_w)
-        renderer.camera.tilt(+1);
+        renderer.camera.tilt(-1);
         //renderer.rotation_x -= renderer.delta_r_x * time_elapsed/10;
     if (is_key_press_e)
         renderer.camera.dolly(-10);
         //renderer.offset_z -= renderer.delta_z * time_elapsed;
     if (is_key_press_a)
-        renderer.camera.pan(-1);
+        renderer.camera.pan(+1);
         //renderer.rotation_y -= renderer.delta_r_y * time_elapsed/10;
     if (is_key_press_s)
-        renderer.camera.tilt(-1);
+        renderer.camera.tilt(+1);
         //renderer.rotation_x += renderer.delta_r_x * time_elapsed/10;
     if (is_key_press_d)
-        renderer.camera.pan(+1);
+        renderer.camera.pan(-1);
         //renderer.rotation_y += renderer.delta_r_y * time_elapsed/10;
 
     //--------------------------------------------------------------
@@ -229,6 +229,7 @@ void Application::mouseMoved(int x, int y ){
 
 //--------------------------------------------------------------
 void Application::mouseDragged(int x, int y, int button){
+    y = ofGetHeight() - y;
     renderer.set_mouse_current_x(x);
     renderer.set_mouse_current_y(y);
 
@@ -253,6 +254,7 @@ void Application::mouseDragged(int x, int y, int button){
 
 //--------------------------------------------------------------
 void Application::mousePressed(int x, int y, int button) {
+    y = ofGetHeight() - y;
     renderer.set_is_mouse_button_pressed(true);
     renderer.set_mouse_current_x(x);
     renderer.set_mouse_current_y(y);
@@ -337,6 +339,7 @@ void Application::mousePressed(int x, int y, int button) {
 
 //--------------------------------------------------------------
 void Application::mouseReleased(int x, int y, int button){
+    y = ofGetHeight() - y;
     renderer.set_is_mouse_button_pressed(false);
 
     renderer.set_mouse_current_x(x);

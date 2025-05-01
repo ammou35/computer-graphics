@@ -198,6 +198,7 @@ ofVec3f Renderer::screenToScene(int x, int y) {
 }
 
 ofVec3f Renderer::screenToViewPlane(int x, int y, const ofVec3f& plane_origin, const ofVec3f& plane_normal) {
+    //y = ofGetHeight() - y;
     ofVec3f screenPosNear(x, y, 0.0f); // Z = proche
     ofVec3f screenPosFar(x, y, 1.0f);  // Z = loin
 

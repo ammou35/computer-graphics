@@ -443,7 +443,7 @@ void Graph::add_element3D(const std::array<int, 2>& mouse_press, const std::arra
 	}
 	else if (get_draw_shape_3D() == ElementScene3DType::directional_light) {
 		element3D[index].lightAttribute.light;
-		element3D[index].lightAttribute.diffuseColor = ofVec3f(31, 255, 31);
+		element3D[index].lightAttribute.diffuseColor = ofVec3f(191, 191, 191);
 		element3D[index].lightAttribute.specularColor = ofVec3f(191, 191, 191);
 		element3D[index].lightAttribute.orientation = ofVec3f(0.0f, 0.0f, 0.0f);
 		element3D[index].lightAttribute.concentration = 0.0f;
@@ -457,7 +457,7 @@ void Graph::add_element3D(const std::array<int, 2>& mouse_press, const std::arra
 		element3D[index].lightAttribute.light.setDirectional();
 	}
 	else if (get_draw_shape_3D() == ElementScene3DType::ambiant) {
-		element3D[index].lightAttribute.diffuseColor = ofVec3f(127, 127, 127);
+		element3D[index].lightAttribute.diffuseColor = ofVec3f(191, 191, 191);
 		element3D[index].lightAttribute.specularColor = ofVec3f(191, 191, 191);
 		element3D[index].lightAttribute.orientation = ofVec3f(0.0f, 0.0f, 0.0f);
 		element3D[index].lightAttribute.concentration = 0.0f;

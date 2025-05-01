@@ -462,13 +462,15 @@ void Geometrie::draw_bezier_curve() {
     else {
         ofSetColor(39, 107, 5);
         mesh.drawWireframe();
-        update_mesh();
-        // Dessiner les points de contr�le
-        ofSetColor(255, 0, 0);
-        for (int i = 0; i < 4; ++i)
-            for (int j = 0; j < 4; ++j)
-                ofDrawEllipse(control_grid[i][j], radius, radius);
+        
+        
     }
+    update_mesh();
+    // Dessiner les points de contr�le
+    ofSetColor(255, 0, 0);
+    for (int i = 0; i < 4; ++i)
+        for (int j = 0; j < 4; ++j)
+            ofDrawEllipse(control_grid[i][j], radius, radius);
 }
 
 void Geometrie::setup_tessellation_surface() {
@@ -484,12 +486,24 @@ void Geometrie::setup_tessellation_surface() {
 
 void Geometrie::draw_bezier_surface_gpu() {
     glPatchParameteri(GL_PATCH_VERTICES, 16);
+    update_tessellation_patch();
     tessellation_shader.begin();
     send_common_matrices(&tessellation_shader); // si tu veux projeter
-    ofLogNotice() << "tessellation_patch has " << tessellation_patch.getNumVertices() << " vertices.";
-    ofLogNotice() << "Mesh mode: " << tessellation_patch.getMode();
-    tessellation_patch.draw(); // contient 16 sommets = 1 patch
+    ofPushStyle();
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // mode wireframe
+    tessellation_patch.draw();
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // retour au mode normal
+    ofPopStyle();
     tessellation_shader.end();
+}
+
+void Geometrie::update_tessellation_patch() {
+    tessellation_patch.clear();
+    tessellation_patch.setMode(OF_PRIMITIVE_PATCHES);
+
+    for (int i = 0; i < 4; ++i)
+        for (int j = 0; j < 4; ++j)
+            tessellation_patch.addVertex(control_grid[i][j]); // points actualisés
 }
 
 void Geometrie::set_projection_mode(bool mode) {
