@@ -80,6 +80,7 @@ public:
 	ofShader gouraud_shader;
 	ofShader flat_shader;
 	ofShader pbr_shader;
+	ofShader nm_shader;
 
 	ofFbo objectFbo;
 
@@ -146,6 +147,14 @@ public:
 
 	void bezier_bicubic(float u, float v, const ofVec3f control_points[4][4], float& x, float& y, float& z);
 	void update_mesh();
+
+	void Geometrie::addTangentsToBox(ofBoxPrimitive& box);
+	ofBufferObject vertexBuffer;
+	ofBufferObject normalBuffer;
+	ofBufferObject texcoordBuffer;
+
+	ofVbo tangentVbo;
+	ofBufferObject tangentBuffer;
 
 	ofVec3f toVec3f(const ofColor& c);
 	void send_common_matrices(ofShader* shader);

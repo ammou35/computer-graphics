@@ -64,6 +64,7 @@ void Geometrie::setup()
     blinn_phong_shader.load("shaders/blinn_phong_vs.glsl", "shaders/blinn_phong_fs.glsl");
     flat_shader.load("shaders/flat_vs.glsl", "shaders/flat_fs.glsl");
     pbr_shader.load("shaders/pbr_330_vs.glsl", "shaders/pbr_330_fs.glsl");
+    nm_shader.load("shaders/bump_vs.glsl", "shaders/bump_fs.glsl");
 
     // Default shader active
     shader_active = &blinn_phong_shader;
@@ -301,6 +302,31 @@ void Geometrie::draw_cube(ofMaterial material, ofImage img, ElementScene3DFiltre
             fshader->end();
         }
     }
+    else if (current_element3D.normal_mapping) {
+        addTangentsToBox(box); // calcul et bind tangentes
+
+        nm_shader.begin();
+        send_common_matrices(&nm_shader);
+        nm_shader.setUniformTexture("uTex", img.getTexture(), 0);
+        nm_shader.setUniformTexture("uNormalMap", getRelief(img), 1);
+
+        for (int i = 0; i < 30; ++i) {
+            const auto& e = element3D[i];
+            if (e.type == ElementScene3DType::point_light ||
+                e.type == ElementScene3DType::directional_light ||
+                e.type == ElementScene3DType::spot_light) {
+                nm_shader.setUniform3f("uLightPos", e.lightAttribute.light.getPosition());
+            }
+        }
+
+        ofMatrix4x4 viewMatrix = ofGetCurrentViewMatrix();
+        ofVec3f cameraPosition = -viewMatrix.getInverse().getTranslation();
+        nm_shader.setUniform3f("uViewPos", cameraPosition);
+
+        tangentVbo.draw(GL_TRIANGLES, 0, box.getMesh().getNumVertices());
+
+        nm_shader.end();
+    }
     else {
         if (shader_active && shader_active->isLoaded()) {
 
@@ -368,13 +394,6 @@ void Geometrie::draw_cube(ofMaterial material, ofImage img, ElementScene3DFiltre
             }
 
             shader_active->setUniformTexture("tex0", img.getTexture(), 0);
-            if (current_element3D.normal_mapping) {
-                shader_active->setUniformTexture("normalMap", getRelief(img), 1);
-				shader_active->setUniform1i("useNormalMap", 1);
-			}
-			else {
-				shader_active->setUniform1i("useNormalMap", 0);
-            }
 
             box.drawFaces();
 
@@ -632,3 +651,58 @@ ofTexture Geometrie::getRelief(ofImage& img) const {
     else
         return texture_None.getTexture();
 }
+
+void Geometrie::addTangentsToBox(ofBoxPrimitive& box) {
+    ofMesh& mesh = box.getMesh();
+    const auto& vertices = mesh.getVertices();
+    const auto& texcoords = mesh.getTexCoords();
+    const auto& indices = mesh.getIndices();
+
+    std::vector<ofVec3f> tangents(vertices.size(), ofVec3f(0, 0, 0));
+
+    for (size_t i = 0; i + 2 < indices.size(); i += 3) {
+        int i0 = indices[i];
+        int i1 = indices[i + 1];
+        int i2 = indices[i + 2];
+
+        const ofVec3f& v0 = vertices[i0];
+        const ofVec3f& v1 = vertices[i1];
+        const ofVec3f& v2 = vertices[i2];
+
+        const ofVec2f& uv0 = texcoords[i0];
+        const ofVec2f& uv1 = texcoords[i1];
+        const ofVec2f& uv2 = texcoords[i2];
+
+        ofVec3f edge1 = v1 - v0;
+        ofVec3f edge2 = v2 - v0;
+        ofVec2f deltaUV1 = uv1 - uv0;
+        ofVec2f deltaUV2 = uv2 - uv0;
+
+        float f = deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y;
+        if (fabs(f) < 1e-6) continue;
+
+        float invF = 1.0f / f;
+        ofVec3f tangent = invF * (deltaUV2.y * edge1 - deltaUV1.y * edge2);
+
+        tangents[i0] += tangent;
+        tangents[i1] += tangent;
+        tangents[i2] += tangent;
+    }
+
+    // Allocation GPU
+    tangentBuffer.allocate(tangents, GL_STATIC_DRAW);
+
+    // Liaison des buffers
+    vertexBuffer.allocate(mesh.getVertices(), GL_STATIC_DRAW);
+    normalBuffer.allocate(mesh.getNormals(), GL_STATIC_DRAW);
+    texcoordBuffer.allocate(mesh.getTexCoords(), GL_STATIC_DRAW);
+    tangentBuffer.allocate(tangents, GL_STATIC_DRAW);
+
+    // Liaison
+    tangentVbo.setMesh(mesh, GL_STATIC_DRAW);
+    tangentVbo.setAttributeBuffer(0, vertexBuffer, 3, sizeof(ofVec3f), 0);
+    tangentVbo.setAttributeBuffer(1, normalBuffer, 3, sizeof(ofVec3f), 0);
+    tangentVbo.setAttributeBuffer(2, texcoordBuffer, 2, sizeof(ofVec2f), 0);
+    tangentVbo.setAttributeBuffer(6, tangentBuffer, 3, sizeof(ofVec3f), 0);
+}
+
