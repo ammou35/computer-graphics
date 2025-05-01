@@ -52,6 +52,12 @@ public:
 	ofImage texture_Sponge;
 	ofImage texture_Checkerboard;
 
+	ofImage normal_Wood;
+	ofImage normal_Sand;
+	ofImage normal_Briks;
+	ofImage normal_Honeycomb;
+	ofImage normal_Sponge;
+
 	ofMaterial material_None;
 	ofMaterial material_VolcanicRock;
 	ofMaterial material_FrozenCrystal;
@@ -80,6 +86,7 @@ public:
 	int shader_mode;
 	ofShader* shader_active = nullptr;
 	string shader_name;
+	bool useNormalMap;
 
 	float selected_point_depth = 0.0f;
 
@@ -131,4 +138,5 @@ public:
 
 	ofVec3f toVec3f(const ofColor& c);
 	void send_common_matrices(ofShader* shader);
+	ofTexture getRelief(ofImage& img) const;
 };
