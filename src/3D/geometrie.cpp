@@ -366,7 +366,7 @@ void Geometrie::draw_primitive(of3dPrimitive& primitive, ofMaterial material, of
                 light_colors.push_back(e.lightAttribute.diffuseColor / 255.0f);
 
                 glm::vec3 dir = glm::vec3(e.lightAttribute.orientation);
-                glm::vec3 view_dir = glm::normalize(glm::mat3(ofGetCurrentMatrix(OF_MATRIX_MODELVIEW)) * dir);
+                glm::vec3 view_dir = glm::normalize(glm::mat3(ofGetCurrentMatrix(OF_MATRIX_MODELVIEW)) * (-dir));
                 light_directions.push_back(view_dir);
 
                 if (e.type == ElementScene3DType::point_light) {

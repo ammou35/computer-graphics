@@ -23,7 +23,7 @@ void main() {
     vec3 color = texture(uTex, vTexCoord).rgb;
     vec3 normalTex = texture(uNormalMap, vTexCoord).rgb;
     vec3 normal = normalize(normalTex * 2.0 - 1.0);
-    vec3 N = normalize(TBN * normal);
+    vec3 N = normalize(normal);
 
     vec3 viewDir = normalize(uViewPos - vFragPos);
     vec3 result = 0.1 * color;  // lumière ambiante
@@ -32,7 +32,7 @@ void main() {
         vec3 L;
 
         if (lightTypes[i] == 0) {
-            L = normalize(vFragPos - lightPositions[i]); // point light
+            L = normalize(lightPositions[i] - vFragPos); // point light
         } else if (lightTypes[i] == 1) {
             L = normalize(-lightDirections[i]); // directional light
         } else if (lightTypes[i] == 2) {
