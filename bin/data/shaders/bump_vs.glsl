@@ -18,7 +18,8 @@ void main() {
 
     vec3 T = normalize(normalMatrix * tangent);
     vec3 N = normalize(normalMatrix * normal);
-    vec3 B = normalize(cross(N, T));  // Bitangent from N x T
+    T = normalize(T - dot(T, N) * N); // Orthonormalise T
+    vec3 B = cross(N, T);             // Bitangent
 
     TBN = mat3(T, B, N);
 

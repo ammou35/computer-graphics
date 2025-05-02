@@ -348,6 +348,10 @@ void Geometrie::draw_primitive(of3dPrimitive& primitive, ofMaterial material, of
     if (current_element3D.normal_mapping) {
         std::vector<ofVec3f> light_positions;
         std::vector<ofVec3f> light_colors;
+        std::vector<ofVec3f> light_directions;
+        std::vector<int> light_types;
+        std::vector<float> spot_cutoffs;
+
         int light_count = 0;
 
         for (int i = 0; i < 30 && light_count < 8; ++i) {
@@ -360,31 +364,50 @@ void Geometrie::draw_primitive(of3dPrimitive& primitive, ofMaterial material, of
                 glm::vec4 view_pos = ofGetCurrentMatrix(OF_MATRIX_MODELVIEW) * glm::vec4(world_pos.x, world_pos.y, world_pos.z, 1.0);
                 light_positions.push_back(glm::vec3(view_pos));
                 light_colors.push_back(e.lightAttribute.diffuseColor / 255.0f);
+
+                glm::vec3 dir = glm::vec3(e.lightAttribute.orientation);
+                glm::vec3 view_dir = glm::normalize(glm::mat3(ofGetCurrentMatrix(OF_MATRIX_MODELVIEW)) * dir);
+                light_directions.push_back(view_dir);
+
+                if (e.type == ElementScene3DType::point_light) {
+                    light_types.push_back(0);
+                    spot_cutoffs.push_back(0.0f);
+                }
+                else if (e.type == ElementScene3DType::directional_light) {
+                    light_types.push_back(1);
+                    spot_cutoffs.push_back(0.0f);
+                }
+                else if (e.type == ElementScene3DType::spot_light) {
+                    light_types.push_back(2);
+                    spot_cutoffs.push_back(cos(ofDegToRad(e.lightAttribute.lightCutOff)));
+                }
+
                 ++light_count;
             }
         }
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         nm_shader.begin();
+
         send_common_matrices(&nm_shader);
+
+        nm_shader.setUniform1i("numLights", light_count);
+        nm_shader.setUniform3fv("lightPositions", &light_positions[0].x, light_count);
+        nm_shader.setUniform3fv("lightColors", &light_colors[0].x, light_count);
+        nm_shader.setUniform3fv("lightDirections", &light_directions[0].x, light_count);
+        nm_shader.setUniform1iv("lightTypes", &light_types[0], light_count);
+        nm_shader.setUniform1fv("spotCutoffs", &spot_cutoffs[0], light_count);
 
         nm_shader.setUniformTexture("uTex", img.getTexture(), 0);
         nm_shader.setUniformTexture("uNormalMap", getRelief(current_element3D.texture), 1);
 
-        // Position lumière transformée en vue
-        glm::vec4 light_pos = ofGetCurrentMatrix(OF_MATRIX_MODELVIEW) * glm::vec4(0, 0, 500, 1.0);
-        nm_shader.setUniform3f("uLightPos", glm::vec3(0, 0, 300));
-
-        // Caméra position
-        ofMatrix4x4 viewMatrix = ofGetCurrentViewMatrix();
-        ofVec3f cameraPosition = -viewMatrix.getInverse().getTranslation();
-        nm_shader.setUniform3f("uViewPos", cameraPosition);
+        nm_shader.setUniform3f("uViewPos", glm::vec3(0, 0, 0));  // en espace vue
 
         tangentVbo.drawElements(GL_TRIANGLES, tangentVbo.getNumIndices());
         nm_shader.end();
-        //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // ou GL_FILL si tu veux rester en plein
         return;
     }
+
     else if (shader_active && shader_active->isLoaded()) {
 
         std::vector<ofVec3f> light_positions;
