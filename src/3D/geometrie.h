@@ -149,7 +149,7 @@ public:
 	void bezier_bicubic(float u, float v, const ofVec3f control_points[4][4], float& x, float& y, float& z);
 	void update_mesh();
 
-	void Geometrie::addTangentsToBox(ofBoxPrimitive& box);
+	void addTangentsToBox(ofBoxPrimitive& box);
 	ofBufferObject vertexBuffer;
 	ofBufferObject normalBuffer;
 	ofBufferObject texcoordBuffer;
@@ -159,5 +159,7 @@ public:
 
 	ofVec3f toVec3f(const ofColor& c);
 	void send_common_matrices(ofShader* shader);
-	ofTexture getRelief(ofImage& img) const;
+	ofTexture getRelief(ElementScene3DTexture texture) const;
+	void computeNormals(ofMesh& mesh);
+
 };

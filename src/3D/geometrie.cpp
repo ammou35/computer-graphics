@@ -64,7 +64,16 @@ void Geometrie::setup()
     blinn_phong_shader.load("shaders/blinn_phong_vs.glsl", "shaders/blinn_phong_fs.glsl");
     flat_shader.load("shaders/flat_vs.glsl", "shaders/flat_fs.glsl");
     pbr_shader.load("shaders/pbr_330_vs.glsl", "shaders/pbr_330_fs.glsl");
-    nm_shader.load("shaders/bump_vs.glsl", "shaders/bump_fs.glsl");
+    nm_shader.setupShaderFromFile(GL_VERTEX_SHADER, "shaders/bump_vs.glsl");
+    nm_shader.setupShaderFromFile(GL_FRAGMENT_SHADER, "shaders/bump_fs.glsl");
+
+    GLuint progID = nm_shader.getProgram();
+    glBindAttribLocation(progID, 0, "position");
+    glBindAttribLocation(progID, 1, "normal");
+    glBindAttribLocation(progID, 2, "texcoord");
+    glBindAttribLocation(progID, 6, "tangent");
+
+    nm_shader.linkProgram();
 
     // Default shader active
     shader_active = &blinn_phong_shader;
@@ -130,6 +139,47 @@ void Geometrie::setup()
     normal_Briks.load("textures/brick_nm.png");
     normal_Honeycomb.load("textures/honeycomb_nm.png");
     normal_Sponge.load("textures/sponge_nm.png");
+
+    normal_Wood.load("textures/wood_nm.png");
+    normal_Sand.load("textures/sand_nm.png");
+    normal_Briks.load("textures/brick_nm.png");
+    normal_Honeycomb.load("textures/honeycomb_nm.png");
+    normal_Sponge.load("textures/sponge_nm.png");
+
+    // Paramétrage des textures de diffusion
+    texture_Wood.getTexture().setTextureWrap(GL_REPEAT, GL_REPEAT);
+    texture_Wood.getTexture().setTextureMinMagFilter(GL_LINEAR, GL_LINEAR);
+
+    texture_Sand.getTexture().setTextureWrap(GL_REPEAT, GL_REPEAT);
+    texture_Sand.getTexture().setTextureMinMagFilter(GL_LINEAR, GL_LINEAR);
+
+    texture_Briks.getTexture().setTextureWrap(GL_REPEAT, GL_REPEAT);
+    texture_Briks.getTexture().setTextureMinMagFilter(GL_LINEAR, GL_LINEAR);
+
+    texture_Honeycomb.getTexture().setTextureWrap(GL_REPEAT, GL_REPEAT);
+    texture_Honeycomb.getTexture().setTextureMinMagFilter(GL_LINEAR, GL_LINEAR);
+
+    texture_Sponge.getTexture().setTextureWrap(GL_REPEAT, GL_REPEAT);
+    texture_Sponge.getTexture().setTextureMinMagFilter(GL_LINEAR, GL_LINEAR);
+
+    texture_Checkerboard.getTexture().setTextureWrap(GL_REPEAT, GL_REPEAT);
+    texture_Checkerboard.getTexture().setTextureMinMagFilter(GL_LINEAR, GL_LINEAR);
+
+    // Paramétrage des normal maps associées
+    normal_Wood.getTexture().setTextureWrap(GL_REPEAT, GL_REPEAT);
+    normal_Wood.getTexture().setTextureMinMagFilter(GL_LINEAR, GL_LINEAR);
+
+    normal_Sand.getTexture().setTextureWrap(GL_REPEAT, GL_REPEAT);
+    normal_Sand.getTexture().setTextureMinMagFilter(GL_LINEAR, GL_LINEAR);
+
+    normal_Briks.getTexture().setTextureWrap(GL_REPEAT, GL_REPEAT);
+    normal_Briks.getTexture().setTextureMinMagFilter(GL_LINEAR, GL_LINEAR);
+
+    normal_Honeycomb.getTexture().setTextureWrap(GL_REPEAT, GL_REPEAT);
+    normal_Honeycomb.getTexture().setTextureMinMagFilter(GL_LINEAR, GL_LINEAR);
+
+    normal_Sponge.getTexture().setTextureWrap(GL_REPEAT, GL_REPEAT);
+    normal_Sponge.getTexture().setTextureMinMagFilter(GL_LINEAR, GL_LINEAR);
 
     int width = 256;
     int height = 256;
@@ -296,6 +346,26 @@ void Geometrie::draw_primitive(of3dPrimitive& primitive, ofMaterial material, of
     }
 
     if (current_element3D.normal_mapping) {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        nm_shader.begin();
+        send_common_matrices(&nm_shader);
+
+        nm_shader.setUniformTexture("uTex", img.getTexture(), 0);
+        nm_shader.setUniformTexture("uNormalMap", getRelief(current_element3D.texture), 1);
+
+        // Position lumière transformée en vue
+        glm::vec4 light_pos = ofGetCurrentMatrix(OF_MATRIX_MODELVIEW) * glm::vec4(0, 0, 500, 1.0);
+        nm_shader.setUniform3f("uLightPos", glm::vec3(0, 0, 300));
+
+        // Caméra position
+        ofMatrix4x4 viewMatrix = ofGetCurrentViewMatrix();
+        ofVec3f cameraPosition = -viewMatrix.getInverse().getTranslation();
+        nm_shader.setUniform3f("uViewPos", cameraPosition);
+
+        tangentVbo.drawElements(GL_TRIANGLES, tangentVbo.getNumIndices());
+        nm_shader.end();
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // ou GL_FILL si tu veux rester en plein
+        return;
     }
     else if (shader_active && shader_active->isLoaded()) {
 
@@ -379,11 +449,18 @@ void Geometrie::draw_primitive(of3dPrimitive& primitive, ofMaterial material, of
 }
 
 
-void Geometrie::draw_cube(ofMaterial material, ofImage img, ElementScene3DFiltre filtre, ElementScene3D* element3D, ElementScene3D current_element3D) {
+void Geometrie::draw_cube(ofMaterial material, ofImage img, ElementScene3DFiltre filtre,
+    ElementScene3D* element3D, ElementScene3D current_element3D) {
     ofBoxPrimitive box;
     box.set(200);
+
+    if (current_element3D.normal_mapping) {
+        addTangentsToBox(box);
+    }
+
     draw_primitive(box, material, img, filtre, element3D, current_element3D);
 }
+
 
 // fonction qui dessine une sph�re
 void Geometrie::draw_sphere(ofMaterial material, ofImage img, ElementScene3DFiltre filtre, ElementScene3D* element3D, ElementScene3D current_element3D) {
@@ -667,23 +744,20 @@ ofShader* Geometrie::get_filter_shader(ElementScene3DFiltre filtre) {
     }
 }
 
-ofTexture Geometrie::getRelief(ofImage& img) const {
-    if (&img == &texture_Wood)
-        return normal_Wood.getTexture();
-    else if (&img == &texture_Sand)
-        return normal_Sand.getTexture();
-    else if (&img == &texture_Briks)
-        return normal_Briks.getTexture();
-    else if (&img == &texture_Honeycomb)
-        return normal_Honeycomb.getTexture();
-    else if (&img == &texture_Sponge)
-        return normal_Sponge.getTexture();
-    else
-        return texture_None.getTexture();
+ofTexture Geometrie::getRelief(ElementScene3DTexture tex) const {
+    switch (tex) {
+    case ElementScene3DTexture::wood: return normal_Wood.getTexture();
+    case ElementScene3DTexture::sand: return normal_Sand.getTexture();
+    case ElementScene3DTexture::briks: return normal_Briks.getTexture();
+    case ElementScene3DTexture::honeycomb: return normal_Honeycomb.getTexture();
+    case ElementScene3DTexture::sponge: return normal_Sponge.getTexture();
+    default: return texture_None.getTexture();
+    }
 }
 
 void Geometrie::addTangentsToBox(ofBoxPrimitive& box) {
     ofMesh& mesh = box.getMesh();
+    computeNormals(mesh);
     const auto& vertices = mesh.getVertices();
     const auto& texcoords = mesh.getTexCoords();
     const auto& indices = mesh.getIndices();
@@ -709,7 +783,7 @@ void Geometrie::addTangentsToBox(ofBoxPrimitive& box) {
         ofVec2f deltaUV2 = uv2 - uv0;
 
         float f = deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y;
-        if (fabs(f) < 1e-6) continue;
+        if (fabs(f) < 1e-6f) continue;
 
         float invF = 1.0f / f;
         ofVec3f tangent = invF * (deltaUV2.y * edge1 - deltaUV1.y * edge2);
@@ -719,20 +793,52 @@ void Geometrie::addTangentsToBox(ofBoxPrimitive& box) {
         tangents[i2] += tangent;
     }
 
-    // Allocation GPU
-    tangentBuffer.allocate(tangents, GL_STATIC_DRAW);
+    // Normalisation des tangentes
+    for (auto& t : tangents)
+        t.normalize();
 
-    // Liaison des buffers
-    vertexBuffer.allocate(mesh.getVertices(), GL_STATIC_DRAW);
+    // Allocation GPU des buffers
+    vertexBuffer.allocate(vertices, GL_STATIC_DRAW);
     normalBuffer.allocate(mesh.getNormals(), GL_STATIC_DRAW);
-    texcoordBuffer.allocate(mesh.getTexCoords(), GL_STATIC_DRAW);
+    texcoordBuffer.allocate(texcoords, GL_STATIC_DRAW);
     tangentBuffer.allocate(tangents, GL_STATIC_DRAW);
 
-    // Liaison
+    // Liaison des données au VBO
     tangentVbo.setMesh(mesh, GL_STATIC_DRAW);
-    tangentVbo.setAttributeBuffer(0, vertexBuffer, 3, sizeof(ofVec3f), 0);
-    tangentVbo.setAttributeBuffer(1, normalBuffer, 3, sizeof(ofVec3f), 0);
-    tangentVbo.setAttributeBuffer(2, texcoordBuffer, 2, sizeof(ofVec2f), 0);
-    tangentVbo.setAttributeBuffer(6, tangentBuffer, 3, sizeof(ofVec3f), 0);
+    tangentVbo.setIndexData(indices.data(), indices.size(), GL_STATIC_DRAW); // Correction ici
+
+    tangentVbo.setAttributeBuffer(0, vertexBuffer, 3, sizeof(ofVec3f), 0);   // position
+    tangentVbo.setAttributeBuffer(1, normalBuffer, 3, sizeof(ofVec3f), 0);   // normal
+    tangentVbo.setAttributeBuffer(2, texcoordBuffer, 2, sizeof(ofVec2f), 0); // texcoord
+    tangentVbo.setAttributeBuffer(6, tangentBuffer, 3, sizeof(ofVec3f), 0);  // tangent
 }
+
+void Geometrie::computeNormals(ofMesh& mesh) {
+    auto& vertices = mesh.getVertices();
+    auto& indices = mesh.getIndices();
+    std::vector<ofVec3f> normals(vertices.size(), ofVec3f(0, 0, 0));
+
+    for (size_t i = 0; i < indices.size(); i += 3) {
+        int ia = indices[i];
+        int ib = indices[i + 1];
+        int ic = indices[i + 2];
+
+        ofVec3f a = vertices[ia];
+        ofVec3f b = vertices[ib];
+        ofVec3f c = vertices[ic];
+
+        ofVec3f normal = (b - a).cross(c - a).normalize();
+        normals[ia] += normal;
+        normals[ib] += normal;
+        normals[ic] += normal;
+    }
+
+    for (auto& n : normals)
+        n.normalize();
+
+    mesh.clearNormals();
+    for (const auto& n : normals)
+        mesh.addNormal(n);
+}
+
 
