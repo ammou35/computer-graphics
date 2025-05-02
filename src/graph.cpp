@@ -250,13 +250,13 @@ void Graph::draw(const std::array<int, 2>& mouse_press, const std::array<int, 2>
 				geometrie.draw_cube(material, texture, element3D[i].filtre, element3D, element3D[i]);
 				break;
 			case ElementScene3DType::sphere:
-				geometrie.draw_sphere(material, texture);
+				geometrie.draw_sphere(material, texture, element3D[i].filtre, element3D, element3D[i]);
 				break;
 			case ElementScene3DType::cylinder:
-				geometrie.draw_cylinder();
+				geometrie.draw_cylinder(material, texture, element3D[i].filtre, element3D, element3D[i]);
 				break;
 			case ElementScene3DType::cone:
-				geometrie.draw_cone();
+				geometrie.draw_cone(material, texture, element3D[i].filtre, element3D, element3D[i]);
 				break;
 			case ElementScene3DType::donut:
 				geometrie.draw_donut();

@@ -276,184 +276,137 @@ void Geometrie::draw_bounding_box() const {
     ofDrawBox(0, 0, 0, 100);
 }
 
-void Geometrie::draw_cube(ofMaterial material, ofImage img, ElementScene3DFiltre filtre, ElementScene3D* element3D, ElementScene3D current_element3D) {
-
-    ofMatrix4x4 modelViewMatrix = ofGetCurrentMatrix(OF_MATRIX_MODELVIEW);
+void Geometrie::draw_primitive(of3dPrimitive& primitive, ofMaterial material, ofImage img, ElementScene3DFiltre filtre, ElementScene3D* element3D, ElementScene3D current_element3D) {
     ofEnableDepthTest();
-    ofBoxPrimitive box;
-    box.set(200);
-    box.getMesh().enableNormals();
-    box.mapTexCoords(0, 0, 1, 1);
-    box.mapTexCoordsFromTexture(img.getTexture()); // ici correct
+    primitive.getMesh().enableNormals();
+    primitive.mapTexCoordsFromTexture(img.getTexture());
 
     bool useSpecialFilter = (filtre != ElementScene3DFiltre::none);
 
     if (useSpecialFilter) {
         ofShader* fshader = get_filter_shader(filtre);
-
         if (fshader && fshader->isLoaded()) {
             fshader->begin();
-
             fshader->setUniformMatrix4f("modelViewProjectionMatrix", ofGetCurrentMatrix(OF_MATRIX_MODELVIEW) * ofGetCurrentMatrix(OF_MATRIX_PROJECTION));
             fshader->setUniformTexture("tex0", img.getTexture(), 0);
-
-            box.drawFaces();
-
+            primitive.drawFaces();
             fshader->end();
+            return;
         }
     }
-    else if (current_element3D.normal_mapping) {
-        addTangentsToBox(box); // calcul et bind tangentes
 
-        nm_shader.begin();
-        send_common_matrices(&nm_shader);
-        nm_shader.setUniformTexture("uTex", img.getTexture(), 0);
-        nm_shader.setUniformTexture("uNormalMap", getRelief(img), 1);
+    if (current_element3D.normal_mapping) {
+    }
+    else if (shader_active && shader_active->isLoaded()) {
+
+        std::vector<ofVec3f> light_positions;
+        std::vector<ofVec3f> light_colors;
+        std::vector<ofVec3f> light_directions;
+        std::vector<int> light_types;
+        std::vector<float> spot_cutoffs;
+        ofVec3f ambient_sum(0, 0, 0);
+
+        ofMatrix4x4 modelViewMatrix = ofGetCurrentMatrix(OF_MATRIX_MODELVIEW);
 
         for (int i = 0; i < 30; ++i) {
             const auto& e = element3D[i];
             if (e.type == ElementScene3DType::point_light ||
                 e.type == ElementScene3DType::directional_light ||
                 e.type == ElementScene3DType::spot_light) {
-                nm_shader.setUniform3f("uLightPos", e.lightAttribute.light.getPosition());
-            }
-        }
 
-        ofMatrix4x4 viewMatrix = ofGetCurrentViewMatrix();
-        ofVec3f cameraPosition = -viewMatrix.getInverse().getTranslation();
-        nm_shader.setUniform3f("uViewPos", cameraPosition);
+                ofVec3f world_pos = e.lightAttribute.light.getGlobalPosition();
+                ofVec3f view_pos = world_pos * modelViewMatrix;
+                glm::vec3 dir = glm::vec3(e.lightAttribute.orientation);
 
-        tangentVbo.draw(GL_TRIANGLES, 0, box.getMesh().getNumVertices());
+                glm::vec3 view_dir = glm::mat3(modelViewMatrix) * dir;
+                light_directions.push_back(ofVec3f(view_dir)); // transforme pour spot et point
 
-        nm_shader.end();
-    }
-    else {
-        if (shader_active && shader_active->isLoaded()) {
+                light_positions.push_back(view_pos);
+                light_colors.push_back(e.lightAttribute.diffuseColor / 255.0f); // normalize
 
-            std::vector<ofVec3f> light_positions;
-            std::vector<ofVec3f> light_colors;
-            std::vector<ofVec3f> light_directions;
-            std::vector<int> light_types;
-            std::vector<float> spot_cutoffs;
-            ofVec3f ambient_sum(0, 0, 0);
-
-            ofMatrix4x4 modelViewMatrix = ofGetCurrentMatrix(OF_MATRIX_MODELVIEW);
-
-            for (int i = 0; i < 30; ++i) {
-                const auto& e = element3D[i];
-                if (e.type == ElementScene3DType::point_light ||
-                    e.type == ElementScene3DType::directional_light ||
-                    e.type == ElementScene3DType::spot_light) {
-
-                    ofVec3f world_pos = e.lightAttribute.light.getGlobalPosition();
-                    ofVec3f view_pos = world_pos * modelViewMatrix;
-                    glm::vec3 dir = glm::vec3(e.lightAttribute.orientation);
-
-                    glm::vec3 view_dir = glm::mat3(modelViewMatrix) * dir;
-                    light_directions.push_back(ofVec3f(view_dir)); // transforme pour spot et point
-
-                    light_positions.push_back(view_pos);
-                    light_colors.push_back(e.lightAttribute.diffuseColor / 255.0f); // normalize
-
-                    if (e.type == ElementScene3DType::point_light) {
-                        light_types.push_back(0);
-                        spot_cutoffs.push_back(0.0f);
-                    }
-                    else if (e.type == ElementScene3DType::directional_light) {
-                        light_types.push_back(1);
-                        spot_cutoffs.push_back(0.0f);
-                    }
-                    else if (e.type == ElementScene3DType::spot_light) {
-                        light_types.push_back(2);
-                        spot_cutoffs.push_back(cos(ofDegToRad(e.lightAttribute.lightCutOff)));
-                    }
-                } else if (e.type == ElementScene3DType::ambiant) {
-                    ambient_sum += e.lightAttribute.diffuseColor / 255.0f;
+                if (e.type == ElementScene3DType::point_light) {
+                    light_types.push_back(0);
+                    spot_cutoffs.push_back(0.0f);
+                }
+                else if (e.type == ElementScene3DType::directional_light) {
+                    light_types.push_back(1);
+                    spot_cutoffs.push_back(0.0f);
+                }
+                else if (e.type == ElementScene3DType::spot_light) {
+                    light_types.push_back(2);
+                    spot_cutoffs.push_back(cos(ofDegToRad(e.lightAttribute.lightCutOff)));
                 }
             }
-
-            shader_active->begin();
-            
-            send_common_matrices(shader_active);
-            shader_active->setUniform3f("mat_ambient", toVec3f(material.getAmbientColor()));
-            shader_active->setUniform3f("color_diffuse", toVec3f(material.getDiffuseColor()));
-            shader_active->setUniform3f("color_specular", toVec3f(material.getSpecularColor()));
-            shader_active->setUniform1f("brightness", 50.0f);
-            shader_active->setUniform3f("light_ambient", ambient_sum);
-            shader_active->setUniform1f("material_roughness", current_element3D.roughness);
-            shader_active->setUniform1f("material_metallic", current_element3D.metallic);
-
-            int count = std::min((int)light_positions.size(), 30);
-            shader_active->setUniform1i("num_lights", count);
-            if (count > 0) {
-                shader_active->setUniform3fv("light_positions", &light_positions[0].x, count);
-                shader_active->setUniform3fv("light_colors", &light_colors[0].x, count);
-                shader_active->setUniform3fv("light_directions", &light_directions[0].x, count);
-                shader_active->setUniform1iv("light_type", &light_types[0], count);
-                shader_active->setUniform1fv("spot_cutoffs", &spot_cutoffs[0], count);
+            else if (e.type == ElementScene3DType::ambiant) {
+                ambient_sum += e.lightAttribute.diffuseColor / 255.0f;
             }
-
-            shader_active->setUniformTexture("tex0", img.getTexture(), 0);
-
-            box.drawFaces();
-
-            shader_active->end();
         }
-        else {
-            material.begin();
-            img.getTexture().bind();
-            box.drawFaces();
-            img.getTexture().unbind();
-            material.end();
+
+        shader_active->begin();
+
+        send_common_matrices(shader_active);
+        shader_active->setUniform3f("mat_ambient", toVec3f(material.getAmbientColor()));
+        shader_active->setUniform3f("color_diffuse", toVec3f(material.getDiffuseColor()));
+        shader_active->setUniform3f("color_specular", toVec3f(material.getSpecularColor()));
+        shader_active->setUniform1f("brightness", 50.0f);
+        shader_active->setUniform3f("light_ambient", ambient_sum);
+        shader_active->setUniform1f("material_roughness", current_element3D.roughness);
+        shader_active->setUniform1f("material_metallic", current_element3D.metallic);
+
+        int count = std::min((int)light_positions.size(), 30);
+        shader_active->setUniform1i("num_lights", count);
+        if (count > 0) {
+            shader_active->setUniform3fv("light_positions", &light_positions[0].x, count);
+            shader_active->setUniform3fv("light_colors", &light_colors[0].x, count);
+            shader_active->setUniform3fv("light_directions", &light_directions[0].x, count);
+            shader_active->setUniform1iv("light_type", &light_types[0], count);
+            shader_active->setUniform1fv("spot_cutoffs", &spot_cutoffs[0], count);
         }
+
+        shader_active->setUniformTexture("tex0", img.getTexture(), 0);
+
+        primitive.drawFaces();
+
+        shader_active->end();
     }
-
-    ofDisableDepthTest();
-    light_positions.clear();
-    light_colors.clear();
+    else {
+        material.begin();
+        img.bind();
+        primitive.draw();
+        img.unbind();
+        material.end();
+    }
 }
+
+
+void Geometrie::draw_cube(ofMaterial material, ofImage img, ElementScene3DFiltre filtre, ElementScene3D* element3D, ElementScene3D current_element3D) {
+    ofBoxPrimitive box;
+    box.set(200);
+    draw_primitive(box, material, img, filtre, element3D, current_element3D);
+}
+
 
 
 
 // fonction qui dessine une sph�re
-void Geometrie::draw_sphere(ofMaterial material, ofImage img)
-{
-    ofEnableDepthTest();
-
+void Geometrie::draw_sphere(ofMaterial material, ofImage img, ElementScene3DFiltre filtre, ElementScene3D* element3D, ElementScene3D current_element3D) {
     ofSpherePrimitive sphere;
-    sphere.set(50, 10);
-    
-    if (shader_active) {
-        shader_active->begin();
-
-        // propri�t�s du mat�riau
-        shader_active->setUniform3f("color_ambient", toVec3f(material.getAmbientColor()));
-        shader_active->setUniform3f("color_diffuse", toVec3f(material.getDiffuseColor()));
-        shader_active->setUniform3f("color_specular", toVec3f(material.getSpecularColor()));
-        shader_active->setUniform1f("brightness", material.getShininess());
-
-        // texture
-        shader_active->setUniformTexture("tex", img.getTexture(), 0);
-
-        send_common_matrices(shader_active);
-
-        sphere.drawFaces();
-        shader_active->end();
-    }
-
-    ofDisableDepthTest();
+    sphere.setRadius(100);
+    draw_primitive(sphere, material, img, filtre, element3D, current_element3D);
 }
 
 // fonction qui dessine un cylindre
-void Geometrie::draw_cylinder() const
-{
-    ofDrawCylinder(0, 0, 0, 50, 100);
+void Geometrie::draw_cylinder(ofMaterial material, ofImage img, ElementScene3DFiltre filtre, ElementScene3D* element3D, ElementScene3D current_element3D) {
+    ofCylinderPrimitive cyl;
+    cyl.set(100, 200);
+    draw_primitive(cyl, material, img, filtre, element3D, current_element3D);
 }
 
 // fonction qui dessine un c�ne
-void Geometrie::draw_cone() const
-{
-    ofDrawCone(0, 0, 0, 50, 100);
+void Geometrie::draw_cone(ofMaterial material, ofImage img, ElementScene3DFiltre filtre, ElementScene3D* element3D, ElementScene3D current_element3D) {
+    ofConePrimitive cone;
+    cone.set(100, 200);
+    draw_primitive(cone, material, img, filtre, element3D, current_element3D);
 }
 
 // fonction qui dessine un donut

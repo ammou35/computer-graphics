@@ -126,11 +126,11 @@ public:
 	void update(ElementScene3D* element3D);
 	void draw();
 
-	void draw_cube(ofMaterial material, ofImage img, ElementScene3DFiltre filtre, ElementScene3D* element3D, ElementScene3D current_element3D);   // Fonction pour ajouter un cube
-	void draw_sphere(ofMaterial material, ofImage img); // Fonction pour ajouter une sph�re
-	void draw_cylinder() const; // Fonction pour ajouter un cylindre
-	void draw_cone() const; // Fonction pour ajouter un c�ne
-
+	void draw_cube(ofMaterial material, ofImage img, ElementScene3DFiltre filtre, ElementScene3D* element3D, ElementScene3D current_element3D);
+	void draw_sphere(ofMaterial material, ofImage img, ElementScene3DFiltre filtre, ElementScene3D* element3D, ElementScene3D current_element3D);
+	void draw_cylinder(ofMaterial material, ofImage img, ElementScene3DFiltre filtre, ElementScene3D* element3D, ElementScene3D current_element3D);
+	void draw_cone(ofMaterial material, ofImage img, ElementScene3DFiltre filtre, ElementScene3D* element3D, ElementScene3D current_element3D);
+	void draw_primitive(of3dPrimitive& primitive, ofMaterial material, ofImage img, ElementScene3DFiltre filtre, ElementScene3D* element3D, ElementScene3D current_element3D);
 	void draw_donut(); // Fonction pour ajouter un donut
 	void draw_plate(); // Fonction pour ajouter une assiette
 	void draw_spaghetti_getter(); // Fonction pour ajouter
@@ -140,7 +140,7 @@ public:
 	void draw_bezier_surface_gpu();
 	void update_tessellation_patch();
 	void draw_skybox();
-
+	
 	ofShader* get_filter_shader(ElementScene3DFiltre filtre);
 	void draw_bounding_box() const;
 	void set_projection_mode(bool mode);
