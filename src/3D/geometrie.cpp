@@ -346,6 +346,24 @@ void Geometrie::draw_primitive(of3dPrimitive& primitive, ofMaterial material, of
     }
 
     if (current_element3D.normal_mapping) {
+        std::vector<ofVec3f> light_positions;
+        std::vector<ofVec3f> light_colors;
+        int light_count = 0;
+
+        for (int i = 0; i < 30 && light_count < 8; ++i) {
+            const auto& e = element3D[i];
+            if (e.type == ElementScene3DType::point_light ||
+                e.type == ElementScene3DType::directional_light ||
+                e.type == ElementScene3DType::spot_light) {
+
+                ofVec3f world_pos = e.lightAttribute.light.getGlobalPosition();
+                glm::vec4 view_pos = ofGetCurrentMatrix(OF_MATRIX_MODELVIEW) * glm::vec4(world_pos.x, world_pos.y, world_pos.z, 1.0);
+                light_positions.push_back(glm::vec3(view_pos));
+                light_colors.push_back(e.lightAttribute.diffuseColor / 255.0f);
+                ++light_count;
+            }
+        }
+
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         nm_shader.begin();
         send_common_matrices(&nm_shader);
@@ -364,7 +382,7 @@ void Geometrie::draw_primitive(of3dPrimitive& primitive, ofMaterial material, of
 
         tangentVbo.drawElements(GL_TRIANGLES, tangentVbo.getNumIndices());
         nm_shader.end();
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // ou GL_FILL si tu veux rester en plein
+        //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // ou GL_FILL si tu veux rester en plein
         return;
     }
     else if (shader_active && shader_active->isLoaded()) {
