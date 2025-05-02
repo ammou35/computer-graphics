@@ -392,11 +392,13 @@ void Geometrie::draw_primitive(of3dPrimitive& primitive, ofMaterial material, of
         send_common_matrices(&nm_shader);
 
         nm_shader.setUniform1i("numLights", light_count);
-        nm_shader.setUniform3fv("lightPositions", &light_positions[0].x, light_count);
-        nm_shader.setUniform3fv("lightColors", &light_colors[0].x, light_count);
-        nm_shader.setUniform3fv("lightDirections", &light_directions[0].x, light_count);
-        nm_shader.setUniform1iv("lightTypes", &light_types[0], light_count);
-        nm_shader.setUniform1fv("spotCutoffs", &spot_cutoffs[0], light_count);
+        if (light_count < 0) {
+            nm_shader.setUniform3fv("lightPositions", &light_positions[0].x, light_count);
+            nm_shader.setUniform3fv("lightColors", &light_colors[0].x, light_count);
+            nm_shader.setUniform3fv("lightDirections", &light_directions[0].x, light_count);
+            nm_shader.setUniform1iv("lightTypes", &light_types[0], light_count);
+            nm_shader.setUniform1fv("spotCutoffs", &spot_cutoffs[0], light_count);
+        }
 
         nm_shader.setUniformTexture("uTex", img.getTexture(), 0);
         nm_shader.setUniformTexture("uNormalMap", getRelief(current_element3D.texture), 1);
