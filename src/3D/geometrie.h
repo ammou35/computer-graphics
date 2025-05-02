@@ -131,9 +131,10 @@ public:
 	void draw_cylinder(ofMaterial material, ofImage img, ElementScene3DFiltre filtre, ElementScene3D* element3D, ElementScene3D current_element3D);
 	void draw_cone(ofMaterial material, ofImage img, ElementScene3DFiltre filtre, ElementScene3D* element3D, ElementScene3D current_element3D);
 	void draw_primitive(of3dPrimitive& primitive, ofMaterial material, ofImage img, ElementScene3DFiltre filtre, ElementScene3D* element3D, ElementScene3D current_element3D);
-	void draw_donut(); // Fonction pour ajouter un donut
-	void draw_plate(); // Fonction pour ajouter une assiette
-	void draw_spaghetti_getter(); // Fonction pour ajouter
+	void draw_model(ofxAssimpModelLoader& model, ofMaterial material, ofImage img, ElementScene3DFiltre filtre, ElementScene3D* element3D, ElementScene3D current_element3D);
+	void draw_donut(ofMaterial material, ofImage img, ElementScene3DFiltre filtre, ElementScene3D* element3D, ElementScene3D current_element3D);
+	void draw_plate(ofMaterial material, ofImage img, ElementScene3DFiltre filtre, ElementScene3D* element3D, ElementScene3D current_element3D);
+	void draw_spaghetti_getter(ofMaterial material, ofImage img, ElementScene3DFiltre filtre, ElementScene3D* element3D, ElementScene3D current_element3D);
 	void draw_bezier_curve();
 	void setup_tessellation_surface();
 	void draw_bezier_surface_cpu();

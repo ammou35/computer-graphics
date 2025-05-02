@@ -259,13 +259,13 @@ void Graph::draw(const std::array<int, 2>& mouse_press, const std::array<int, 2>
 				geometrie.draw_cone(material, texture, element3D[i].filtre, element3D, element3D[i]);
 				break;
 			case ElementScene3DType::donut:
-				geometrie.draw_donut();
+				geometrie.draw_donut(material, texture, element3D[i].filtre, element3D, element3D[i]);
 				break;
 			case ElementScene3DType::plate:
-				geometrie.draw_plate();
+				geometrie.draw_plate(material, texture, element3D[i].filtre, element3D, element3D[i]);
 				break;
 			case ElementScene3DType::spaghetti_getter:
-				geometrie.draw_spaghetti_getter();
+				geometrie.draw_spaghetti_getter(material, texture, element3D[i].filtre, element3D, element3D[i]);
 				break;
 			case ElementScene3DType::bezier_curve:
 				geometrie.draw_bezier_curve();

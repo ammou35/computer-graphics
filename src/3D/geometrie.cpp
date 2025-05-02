@@ -385,9 +385,6 @@ void Geometrie::draw_cube(ofMaterial material, ofImage img, ElementScene3DFiltre
     draw_primitive(box, material, img, filtre, element3D, current_element3D);
 }
 
-
-
-
 // fonction qui dessine une sph�re
 void Geometrie::draw_sphere(ofMaterial material, ofImage img, ElementScene3DFiltre filtre, ElementScene3D* element3D, ElementScene3D current_element3D) {
     ofSpherePrimitive sphere;
@@ -409,37 +406,117 @@ void Geometrie::draw_cone(ofMaterial material, ofImage img, ElementScene3DFiltre
     draw_primitive(cone, material, img, filtre, element3D, current_element3D);
 }
 
-// fonction qui dessine un donut
-void Geometrie::draw_donut()
-{
-    // configurer le mat�riau du teapot
+void Geometrie::draw_model(ofxAssimpModelLoader& model, ofMaterial material, ofImage img, ElementScene3DFiltre filtre, ElementScene3D* element3D, ElementScene3D current_element3D) {
+    model.disableTextures();
+    model.disableMaterials();
     ofEnableDepthTest();
 
-    donut.draw(OF_MESH_FILL);
-    //donutImage.getTexture().bind();
-    //donut.drawFaces();
-    //donutImage.getTexture().unbind();
+    bool useSpecialFilter = (filtre != ElementScene3DFiltre::none);
 
-    // d�sactiver le mat�riau
-    //material_donut.end();
-    //donut.drawWireframe();
-    ofDisableDepthTest();
+    if (useSpecialFilter) {
+        ofShader* fshader = get_filter_shader(filtre);
+        if (fshader && fshader->isLoaded()) {
+            fshader->begin();
+            fshader->setUniformMatrix4f("modelViewProjectionMatrix", ofGetCurrentMatrix(OF_MATRIX_MODELVIEW) * ofGetCurrentMatrix(OF_MATRIX_PROJECTION));
+            fshader->setUniformTexture("tex0", img.getTexture(), 0);
+            model.drawFaces();
+            fshader->end();
+            return;
+        }
+    }
+
+    if (current_element3D.normal_mapping) {}
+    else if (shader_active && shader_active->isLoaded()) {
+        std::vector<ofVec3f> light_positions;
+        std::vector<ofVec3f> light_colors;
+        std::vector<ofVec3f> light_directions;
+        std::vector<int> light_types;
+        std::vector<float> spot_cutoffs;
+        ofVec3f ambient_sum(0, 0, 0);
+
+        ofMatrix4x4 modelViewMatrix = ofGetCurrentMatrix(OF_MATRIX_MODELVIEW);
+
+        for (int i = 0; i < 30; ++i) {
+            const auto& e = element3D[i];
+            if (e.type == ElementScene3DType::point_light ||
+                e.type == ElementScene3DType::directional_light ||
+                e.type == ElementScene3DType::spot_light) {
+
+                ofVec3f world_pos = e.lightAttribute.light.getGlobalPosition();
+                ofVec3f view_pos = world_pos * modelViewMatrix;
+                glm::vec3 dir = glm::vec3(e.lightAttribute.orientation);
+
+                glm::vec3 view_dir = glm::mat3(modelViewMatrix) * dir;
+                light_directions.push_back(ofVec3f(view_dir)); // transforme pour spot et point
+
+                light_positions.push_back(view_pos);
+                light_colors.push_back(e.lightAttribute.diffuseColor / 255.0f); // normalize
+
+                if (e.type == ElementScene3DType::point_light) {
+                    light_types.push_back(0);
+                    spot_cutoffs.push_back(0.0f);
+                }
+                else if (e.type == ElementScene3DType::directional_light) {
+                    light_types.push_back(1);
+                    spot_cutoffs.push_back(0.0f);
+                }
+                else if (e.type == ElementScene3DType::spot_light) {
+                    light_types.push_back(2);
+                    spot_cutoffs.push_back(cos(ofDegToRad(e.lightAttribute.lightCutOff)));
+                }
+            }
+            else if (e.type == ElementScene3DType::ambiant) {
+                ambient_sum += e.lightAttribute.diffuseColor / 255.0f;
+            }
+        }
+
+        shader_active->begin();
+
+        send_common_matrices(shader_active);
+        shader_active->setUniform3f("mat_ambient", toVec3f(material.getAmbientColor()));
+        shader_active->setUniform3f("color_diffuse", toVec3f(material.getDiffuseColor()));
+        shader_active->setUniform3f("color_specular", toVec3f(material.getSpecularColor()));
+        shader_active->setUniform1f("brightness", 50.0f);
+        shader_active->setUniform3f("light_ambient", ambient_sum);
+        shader_active->setUniform1f("material_roughness", current_element3D.roughness);
+        shader_active->setUniform1f("material_metallic", current_element3D.metallic);
+
+        int count = std::min((int)light_positions.size(), 30);
+        shader_active->setUniform1i("num_lights", count);
+        if (count > 0) {
+            shader_active->setUniform3fv("light_positions", &light_positions[0].x, count);
+            shader_active->setUniform3fv("light_colors", &light_colors[0].x, count);
+            shader_active->setUniform3fv("light_directions", &light_directions[0].x, count);
+            shader_active->setUniform1iv("light_type", &light_types[0], count);
+            shader_active->setUniform1fv("spot_cutoffs", &spot_cutoffs[0], count);
+        }
+
+        shader_active->setUniformTexture("tex0", img.getTexture(), 0);
+        model.drawFaces();
+        shader_active->end();
+    }
+    else {
+        model.enableTextures();
+        model.enableMaterials();
+        material.begin();
+        img.bind();
+        model.drawFaces();
+        img.unbind();
+        material.end();
+    }
 }
 
-// fonction qui dessine une assiette
-void Geometrie::draw_plate()
-{
-    ofEnableDepthTest();
-    plate.drawWireframe();
-    ofDisableDepthTest();
+
+void Geometrie::draw_donut(ofMaterial material, ofImage img, ElementScene3DFiltre filtre, ElementScene3D* element3D, ElementScene3D current_element3D) {
+    draw_model(donut, material, img, filtre, element3D, current_element3D);
 }
 
-// fonction qui dessine un c�ne
-void Geometrie::draw_spaghetti_getter()
-{
-    ofEnableDepthTest();
-    spaghetti_getter.draw(OF_MESH_FILL);
-    ofDisableDepthTest();
+void Geometrie::draw_plate(ofMaterial material, ofImage img, ElementScene3DFiltre filtre, ElementScene3D* element3D, ElementScene3D current_element3D) {
+    draw_model(plate, material, img, filtre, element3D, current_element3D);
+}
+
+void Geometrie::draw_spaghetti_getter(ofMaterial material, ofImage img, ElementScene3DFiltre filtre, ElementScene3D* element3D, ElementScene3D current_element3D) {
+    draw_model(spaghetti_getter, material, img, filtre, element3D, current_element3D);
 }
 
 void Geometrie::draw_bezier_curve() {

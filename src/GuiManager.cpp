@@ -502,7 +502,10 @@ void GuiManager::draw(ElementScene2D* element2D, ElementScene3D* element3D, cons
                             element3D[i].type == ElementScene3DType::cube ||
                             element3D[i].type == ElementScene3DType::sphere ||
                             element3D[i].type == ElementScene3DType::cylinder ||
-                            element3D[i].type == ElementScene3DType::cone
+                            element3D[i].type == ElementScene3DType::cone ||
+                            element3D[i].type == ElementScene3DType::donut ||
+                            element3D[i].type == ElementScene3DType::spaghetti_getter ||
+                            element3D[i].type == ElementScene3DType::plate
                             );
 
                         bool isLight = (
